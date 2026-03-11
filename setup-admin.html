@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Setup Admin — UNIQ CELL</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <style>
+    body { font-family:'Segoe UI',sans-serif; display:flex; align-items:center; justify-content:center;
+      min-height:100vh; background:#f0f4f8; margin:0; }
+    .box { background:white; padding:32px; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.1);
+      max-width:360px; width:100%; text-align:center; }
+    h2 { color:#1e3a8a; margin-bottom:8px; }
+    p  { color:#6b7280; font-size:13px; margin-bottom:24px; }
+    input { width:100%; padding:10px 14px; border:1.5px solid #e5e7eb; border-radius:8px;
+      font-size:14px; margin-bottom:12px; outline:none; box-sizing:border-box; }
+    input:focus { border-color:#2563eb; }
+    button { width:100%; padding:12px; background:linear-gradient(135deg,#1e3a8a,#2563eb);
+      color:white; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; }
+    #msg { margin-top:16px; font-size:13px; font-weight:600; }
+  </style>
+</head>
+<body>
+<div class="box">
+  <h2>🛡️ Setup Admin</h2>
+  <p>Halaman ini hanya dipakai <strong>sekali</strong> untuk membuat akun admin.<br>Hapus file ini setelah selesai!</p>
+  <input type="text" id="adminPass" placeholder="Buat password admin" />
+  <button onclick="buatAdmin()">Buat Akun Admin</button>
+  <div id="msg"></div>
+</div>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyBjTKyBkKdZ9d1p2XS2PrLMpHsvvqK0jYk",
+  authDomain: "form-pesanan-uniq.firebaseapp.com",
+  databaseURL: "https://form-pesanan-uniq-default-rtdb.firebaseio.com",
+  projectId: "form-pesanan-uniq",
+  storageBucket: "form-pesanan-uniq.firebasestorage.app",
+  messagingSenderId: "507202084583",
+  appId: "1:507202084583:web:b097401aefce60bd03cc42"
+});
+const db = firebase.database();
+function hashPw(pw) {
+  let h = 0;
+  for (let i = 0; i < pw.length; i++) h = (Math.imul(31, h) + pw.charCodeAt(i)) | 0;
+  return Math.abs(h).toString(36) + pw.length.toString(36);
+}
+async function buatAdmin() {
+  const pw = document.getElementById("adminPass").value.trim();
+  if (pw.length < 6) { document.getElementById("msg").innerHTML = '<span style="color:red">Password minimal 6 karakter!</span>'; return; }
+  await db.ref("users/admin").set({
+    nama: "Administrator", username: "admin",
+    password: hashPw(pw), role: "admin",
+    createdAt: new Date().toISOString()
+  });
+  document.getElementById("msg").innerHTML = '<span style="color:green">✓ Akun admin berhasil dibuat! Silakan hapus file setup-admin.html ini.</span>';
+}
+</script>
+</body>
+</html>

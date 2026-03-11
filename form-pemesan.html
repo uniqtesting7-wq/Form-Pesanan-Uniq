@@ -109,6 +109,7 @@
     .sync-dot.syncing { background:#fbbf24; animation:pulse 1s infinite; }
     .sync-dot.error   { background:#f87171; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    @keyframes spin   { to { transform:rotate(360deg); } }
     #toast { position:fixed; bottom:24px; right:24px; z-index:9999; background:#1e3a8a; color:white; padding:10px 18px; border-radius:10px; font-size:13px; font-weight:600; display:none; box-shadow:0 4px 16px rgba(0,0,0,0.18); }
     #toast.show { display:block; animation:fadeUp .3s ease; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
@@ -202,6 +203,17 @@
         </button>
         <button class="btn btn-sm fw-semibold" style="background:rgba(255,255,255,0.2);color:white;border:none" onclick="window.print()">
           <i class="bi bi-printer me-1"></i>Cetak
+        </button>
+        <button id="btnAdmin" class="btn btn-sm fw-semibold" style="background:#f59e0b;color:white;border:none;display:none"
+          data-bs-toggle="modal" data-bs-target="#modalAdmin">
+          <i class="bi bi-shield-lock me-1"></i>Admin
+        </button>
+        <button class="btn btn-sm fw-semibold" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3)"
+          data-bs-toggle="modal" data-bs-target="#modalGantiPw" title="Ganti Password">
+          <i class="bi bi-person-lock me-1"></i><span id="labelUser">Akun</span>
+        </button>
+        <button class="btn btn-sm fw-semibold" style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);border:1px solid rgba(255,255,255,0.2)" onclick="doLogout()" title="Keluar">
+          <i class="bi bi-box-arrow-right"></i>
         </button>
       </div>
     </div>
@@ -314,6 +326,80 @@
 
 <div id="toast"></div>
 
+<!-- Modal Ganti Password -->
+<div class="modal fade" id="modalGantiPw" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content" style="border-radius:16px;border:none;overflow:hidden">
+      <div class="modal-header border-0 pb-0" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:white;padding:20px 22px 16px">
+        <h6 class="modal-title fw-bold"><i class="bi bi-person-lock me-2"></i>Akun Saya</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 py-3">
+
+        <!-- Info Akun -->
+        <div style="background:#f0f6ff;border-radius:10px;padding:12px 14px;margin-bottom:18px;border:1px solid #dbeafe">
+          <div style="font-size:11px;color:#6b7280;font-weight:700;letter-spacing:1px;margin-bottom:4px">LOGGED IN AS</div>
+          <div style="font-weight:800;color:#1e3a8a;font-size:15px" id="pwNamaUser">—</div>
+          <div style="font-size:12px;color:#64748b" id="pwUsernameUser">—</div>
+        </div>
+
+        <div id="pwAlert" style="display:none;padding:9px 12px;border-radius:8px;font-size:12px;font-weight:600;margin-bottom:14px"></div>
+
+        <div class="mb-3">
+          <label style="font-size:11px;font-weight:700;color:#6b7280;letter-spacing:1px;display:block;margin-bottom:5px">PASSWORD LAMA</label>
+          <div style="position:relative">
+            <input type="password" id="pwLama" class="form-control form-control-sm" placeholder="Masukkan password lama" style="padding-right:38px"/>
+            <button onclick="togglePwField('pwLama',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;padding:2px">👁</button>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label style="font-size:11px;font-weight:700;color:#6b7280;letter-spacing:1px;display:block;margin-bottom:5px">PASSWORD BARU</label>
+          <div style="position:relative">
+            <input type="password" id="pwBaru" class="form-control form-control-sm" placeholder="Minimal 6 karakter" style="padding-right:38px"/>
+            <button onclick="togglePwField('pwBaru',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;padding:2px">👁</button>
+          </div>
+        </div>
+        <div class="mb-1">
+          <label style="font-size:11px;font-weight:700;color:#6b7280;letter-spacing:1px;display:block;margin-bottom:5px">KONFIRMASI PASSWORD BARU</label>
+          <div style="position:relative">
+            <input type="password" id="pwKonfirm" class="form-control form-control-sm" placeholder="Ulangi password baru" style="padding-right:38px"
+              onkeydown="if(event.key==='Enter') gantiPassword()"/>
+            <button onclick="togglePwField('pwKonfirm',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;padding:2px">👁</button>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer border-0 pt-0 px-4 pb-4">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-sm fw-semibold" id="btnGantiPw"
+          style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:white;border:none;padding:7px 18px"
+          onclick="gantiPassword()">
+          <i class="bi bi-key me-1"></i>Simpan Password
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Admin Panel -->
+<div class="modal fade" id="modalAdmin" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius:16px;border:none">
+      <div class="modal-header border-0 pb-0" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);border-radius:16px 16px 0 0;color:white;padding:20px 24px">
+        <h6 class="modal-title fw-bold"><i class="bi bi-shield-lock me-2"></i>Admin Panel — Semua Data User</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0">
+        <div id="adminContent" style="padding:20px">
+          <div class="text-center py-4" style="color:#9ca3af">
+            <div class="spinner-border spinner-border-sm me-2"></div>Memuat data...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Tambah Pelanggan -->
 <div class="modal fade" id="modalTambah" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -377,7 +463,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// ── Firebase Config ────────────────────────────────────
+// ── Firebase ───────────────────────────────────────────
 firebase.initializeApp({
   apiKey: "AIzaSyBjTKyBkKdZ9d1p2XS2PrLMpHsvvqK0jYk",
   authDomain: "form-pesanan-uniq.firebaseapp.com",
@@ -387,30 +473,126 @@ firebase.initializeApp({
   messagingSenderId: "507202084583",
   appId: "1:507202084583:web:b097401aefce60bd03cc42"
 });
-const db    = firebase.database();
-const dbRef = db.ref("appData"); // ← path baru agar tidak bentrok
+const db = firebase.database();
 
-// ── Data Default (form KOSONG untuk pelanggan baru) ────
+// ── Auth Guard ─────────────────────────────────────────
+const sessRaw  = sessionStorage.getItem("uniqUser");
+if (!sessRaw) { window.location.href = "login.html"; throw 0; }
+const CURR_USER = JSON.parse(sessRaw);
+const IS_ADMIN  = CURR_USER.role === "admin";
+
+// Path data per user: users/{username}/appData
+const dbRef = db.ref(`users/${CURR_USER.username}/appData`);
+
+// ── Tampilkan info user ────────────────────────────────
+document.getElementById("labelUser").textContent = CURR_USER.nama || CURR_USER.username;
+if (IS_ADMIN) document.getElementById("btnAdmin").style.display = "inline-flex";
+
+function doLogout() {
+  if (!confirm("Yakin mau keluar?")) return;
+  sessionStorage.removeItem("uniqUser");
+  window.location.href = "login.html";
+}
+
+// ── Ganti Password ────────────────────────────────────
+function togglePwField(id, btn) {
+  const inp = document.getElementById(id);
+  const show = inp.type === "password";
+  inp.type = show ? "text" : "password";
+  btn.textContent = show ? "🙈" : "👁";
+}
+
+function showPwAlert(msg, type="error") {
+  const el = document.getElementById("pwAlert");
+  el.style.display = "block";
+  el.textContent   = msg;
+  el.style.background = type === "success" ? "#f0fdf4" : "#fef2f2";
+  el.style.color      = type === "success" ? "#16a34a" : "#dc2626";
+  el.style.border     = type === "success" ? "1px solid #bbf7d0" : "1px solid #fecaca";
+}
+
+// Isi info akun saat modal dibuka
+document.getElementById("modalGantiPw").addEventListener("show.bs.modal", () => {
+  document.getElementById("pwNamaUser").textContent     = CURR_USER.nama || "-";
+  document.getElementById("pwUsernameUser").textContent = "@" + CURR_USER.username;
+  document.getElementById("pwLama").value    = "";
+  document.getElementById("pwBaru").value    = "";
+  document.getElementById("pwKonfirm").value = "";
+  document.getElementById("pwAlert").style.display = "none";
+  // Reset toggle icons
+  ["pwLama","pwBaru","pwKonfirm"].forEach(id => {
+    document.getElementById(id).type = "password";
+  });
+});
+
+function hashPw(pw) {
+  let h = 0;
+  for (let i = 0; i < pw.length; i++) h = (Math.imul(31, h) + pw.charCodeAt(i)) | 0;
+  return Math.abs(h).toString(36) + pw.length.toString(36);
+}
+
+async function gantiPassword() {
+  const lama    = document.getElementById("pwLama").value;
+  const baru    = document.getElementById("pwBaru").value;
+  const konfirm = document.getElementById("pwKonfirm").value;
+
+  if (!lama)             { showPwAlert("⚠️ Masukkan password lama dulu!"); return; }
+  if (baru.length < 6)   { showPwAlert("⚠️ Password baru minimal 6 karakter!"); return; }
+  if (baru !== konfirm)  { showPwAlert("⚠️ Konfirmasi password tidak cocok!"); return; }
+  if (lama === baru)     { showPwAlert("⚠️ Password baru harus berbeda dari yang lama!"); return; }
+
+  const btn = document.getElementById("btnGantiPw");
+  btn.disabled = true;
+  btn.innerHTML = `<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle"></span>Menyimpan...`;
+
+  try {
+    // Verifikasi password lama dari Firebase
+    const snap = await db.ref(`users/${CURR_USER.username}/password`).get();
+    if (!snap.exists() || snap.val() !== hashPw(lama)) {
+      showPwAlert("❌ Password lama salah!");
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-key me-1"></i>Simpan Password';
+      return;
+    }
+
+    // Update password di Firebase
+    await db.ref(`users/${CURR_USER.username}/password`).set(hashPw(baru));
+
+    showPwAlert("✓ Password berhasil diubah!", "success");
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-key me-1"></i>Simpan Password';
+
+    // Tutup modal setelah 1.5 detik
+    setTimeout(() => {
+      bootstrap.Modal.getInstance(document.getElementById("modalGantiPw"))?.hide();
+    }, 1500);
+
+  } catch(e) {
+    showPwAlert("❌ Gagal: " + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-key me-1"></i>Simpan Password';
+  }
+}
+
+// ── Default ────────────────────────────────────────────
 const DEF_JASA = { desc:"Jasa Pemasangan + Setting", qty:"", harga:"" };
-
-function formKosong(nama) {
+function formKosong() {
   return {
-    pelanggan: { nama: nama || "", noOrder:"", noUpb:"", tanggal: new Date().toISOString().split("T")[0] },
+    pelanggan: { nama:"", noOrder:"", noUpb:"", tanggal: new Date().toISOString().split("T")[0] },
     material:  [{ nama:"", qty:1, harga:0 }],
     aksesoris: [{ nama:"", qty:1, harga:0 }],
     jasa:      { ...DEF_JASA }
   };
 }
 
-// ── State Global ───────────────────────────────────────
-let pelangganList  = [];  // [{ id, nama }]
-let allData        = {};  // { [id]: { pelanggan, material, aksesoris, jasa } }
+// ── State ──────────────────────────────────────────────
+let pelangganList  = [];
+let allData        = {};
 let activeId       = null;
 let saveTimer      = null;
 let isFromFirebase = false;
-
-let dataMaterial  = [{ nama:"", qty:1, harga:0 }];
-let dataAksesoris = [{ nama:"", qty:1, harga:0 }];
+let dataMaterial   = [{ nama:"", qty:1, harga:0 }];
+let dataAksesoris  = [{ nama:"", qty:1, harga:0 }];
 
 // ── Util ───────────────────────────────────────────────
 const formatRp   = n => "Rp " + Number(n||0).toLocaleString("id-ID");
@@ -461,11 +643,9 @@ function konfirmasiTambah() {
   const nama = document.getElementById("inputNamaBaru").value.trim();
   if (!nama) { showToast("⚠️ Isi nama dulu!", "#f59e0b"); return; }
   bootstrap.Modal.getInstance(document.getElementById("modalTambah"))?.hide();
-
   const id = uid();
   pelangganList.push({ id, nama });
-  allData[id] = formKosong(nama); // ← form KOSONG, bukan copy lama
-
+  allData[id] = formKosong(); // form kosong, nama tab = nama pelanggan di form nanti
   if (activeId) simpanStateAktif();
   activeId = id;
   renderTabs();
@@ -511,11 +691,10 @@ function ambilState() {
 function simpanStateAktif() {
   if (!activeId) return;
   allData[activeId] = ambilState();
-  // Sync nama tab dengan isi field
   const idx = pelangganList.findIndex(p => p.id === activeId);
   if (idx >= 0) {
-    const namaBaru = document.getElementById("namaPelanggan").value.trim();
-    if (namaBaru) pelangganList[idx].nama = namaBaru;
+    const n = document.getElementById("namaPelanggan").value.trim();
+    if (n) pelangganList[idx].nama = n;
   }
 }
 
@@ -526,15 +705,12 @@ function isiForm(s) {
   document.getElementById("noOrder").value       = p.noOrder || "";
   document.getElementById("noUpb").value         = p.noUpb   || "";
   document.getElementById("tanggal").value       = p.tanggal || new Date().toISOString().split("T")[0];
-
   dataMaterial  = (s.material  && s.material.length)  ? s.material  : [{ nama:"", qty:1, harga:0 }];
   dataAksesoris = (s.aksesoris && s.aksesoris.length) ? s.aksesoris : [{ nama:"", qty:1, harga:0 }];
-
   const j = s.jasa || {};
   document.getElementById("jasaDesc").value  = j.desc  || DEF_JASA.desc;
   document.getElementById("jasaQty").value   = j.qty   || "";
   document.getElementById("jasaHarga").value = j.harga || "";
-
   renderTabel("bodyMaterial",  dataMaterial);
   renderTabel("bodyAksesoris", dataAksesoris);
   hitungSemua();
@@ -545,7 +721,7 @@ function simpanKeFirebase() {
   setSyncStatus("syncing", "Menyimpan...");
   dbRef.set({ pelangganList, data: allData })
     .then(() => setSyncStatus("synced", "Tersinkron real-time ☁️"))
-    .catch(e => { setSyncStatus("error", "Gagal sync"); showToast("❌ " + e.message, "#ef4444"); });
+    .catch(e => { setSyncStatus("error", "Gagal sync"); showToast("❌ "+e.message,"#ef4444"); });
 }
 
 function autoSave() {
@@ -563,7 +739,6 @@ function simpanManual() {
   showToast("✓ Tersimpan!", "#22c55e");
 }
 
-// ── Firebase listener ─────────────────────────────────
 dbRef.on("value", (snap) => {
   const raw = snap.val();
   isFromFirebase = true;
@@ -573,19 +748,17 @@ dbRef.on("value", (snap) => {
     if (!activeId || !pelangganList.find(p => p.id === activeId))
       activeId = pelangganList[0].id;
   } else {
-    // Database kosong — buat 1 pelanggan kosong
     const id = uid();
-    pelangganList = [{ id, nama:"Pelanggan 1" }];
-    allData = { [id]: formKosong("Pelanggan 1") };
+    pelangganList = [{ id, nama: "Pelanggan Baru" }];
+    allData = { [id]: formKosong() };
     activeId = id;
   }
   renderTabs();
   isiForm(allData[activeId] || formKosong());
   setSyncStatus("synced", "Tersinkron real-time ☁️");
   isFromFirebase = false;
-}, (err) => {
-  setSyncStatus("error", "❌ " + err.message);
-  showToast("Firebase error: " + err.message, "#ef4444");
+}, err => {
+  setSyncStatus("error", "❌ "+err.message);
 });
 
 // ── Render Tabel ───────────────────────────────────────
@@ -609,13 +782,11 @@ function renderTabel(bodyId, data) {
         oninput="updateItem('${bodyId}',${i},'harga',this.value)"/></td>
       <td class="text-end subtotal ${item.qty*item.harga===0?"zero":""}" id="sub_${bodyId}_${i}">
         ${formatRp(item.qty*item.harga)}</td>
-      <td class="no-print">
-        <div class="action-btns">
-          <button class="btn-remove" onclick="hapusItem('${bodyId}',${i})">×</button>
-          ${isLast ? `<button class="btn-add-row" onclick="tambahItem('${tipe}')">+</button>`
-                   : '<div style="width:30px"></div>'}
-        </div>
-      </td>`;
+      <td class="no-print"><div class="action-btns">
+        <button class="btn-remove" onclick="hapusItem('${bodyId}',${i})">×</button>
+        ${isLast ? `<button class="btn-add-row" onclick="tambahItem('${tipe}')">+</button>`
+                 : '<div style="width:30px"></div>'}
+      </div></td>`;
     tbody.appendChild(tr);
   });
   hitungSemua();
@@ -636,16 +807,14 @@ function tambahItem(tipe) {
   const data   = tipe==="material" ? dataMaterial : dataAksesoris;
   const bodyId = tipe==="material" ? "bodyMaterial" : "bodyAksesoris";
   data.push({ nama:"", qty:1, harga:0 });
-  renderTabel(bodyId, data);
-  autoSave();
+  renderTabel(bodyId, data); autoSave();
 }
 
 function hapusItem(bodyId, idx) {
   const data = bodyId==="bodyMaterial" ? dataMaterial : dataAksesoris;
   if (data.length <= 1) { showToast("⚠️ Minimal 1 baris!", "#f59e0b"); return; }
   data.splice(idx, 1);
-  renderTabel(bodyId, data);
-  autoSave();
+  renderTabel(bodyId, data); autoSave();
 }
 
 // ── Hitung Total ──────────────────────────────────────
@@ -675,7 +844,6 @@ function kirimWA() {
   const totalM = dataMaterial.reduce((s,i)  => s+i.qty*i.harga, 0);
   const totalA = dataAksesoris.reduce((s,i) => s+i.qty*i.harga, 0);
   const totalJ = jasaQ*jasaH;
-
   let msg = "📦 *ORDER LIST*\n━━━━━━━━━━━━━━━━\n";
   msg += `👤 *${nama}*\n📋 No. Order: ${noOrd}\n📋 No. UPB: ${noUpb}\n📅 ${tgl}\n\n`;
   msg += "🔧 *Material Utama*\n";
@@ -686,7 +854,6 @@ function kirimWA() {
   msg += `_Subtotal: ${formatRp(totalA)}_\n\n`;
   msg += `👷 *${jasaD}*\n    ${jasaQ} pcs × ${formatRp(jasaH)} = *${formatRp(totalJ)}*\n\n`;
   msg += `━━━━━━━━━━━━━━━━\n💰 *GRAND TOTAL: ${formatRp(totalM+totalA+totalJ)}*`;
-
   const noWA = prompt("Nomor WA tujuan (contoh: 628123456789):", "628");
   if (!noWA) return;
   window.open(`https://wa.me/${noWA.replace(/[^0-9]/g,"")}?text=${encodeURIComponent(msg)}`, "_blank");
@@ -707,27 +874,152 @@ const SCRIPT_CODE = `function doPost(e) {
   return ContentService.createTextOutput(JSON.stringify({status:"ok"})).setMimeType(ContentService.MimeType.JSON);
 }`;
 document.getElementById("appsScriptCode").textContent = SCRIPT_CODE;
-
 function copyScript() {
-  navigator.clipboard.writeText(SCRIPT_CODE)
-    .then(() => showToast("✓ Script disalin!", "#34a853"))
-    .catch(() => showToast("Copy manual ya"));
+  navigator.clipboard.writeText(SCRIPT_CODE).then(()=>showToast("✓ Script disalin!","#34a853")).catch(()=>showToast("Copy manual ya"));
 }
-
 async function kirimSheets() {
   const url = document.getElementById("sheetsUrl").value.trim();
-  if (!url) { showToast("⚠️ Isi URL dulu!", "#f59e0b"); return; }
+  if (!url) { showToast("⚠️ Isi URL dulu!","#f59e0b"); return; }
   localStorage.setItem("sheetsUrl", url);
   const s = ambilState();
   const payload = { nama:s.pelanggan.nama, noOrder:s.pelanggan.noOrder, noUpb:s.pelanggan.noUpb,
     tanggal:s.pelanggan.tanggal, material:s.material, aksesoris:s.aksesoris,
     jasaDesc:s.jasa.desc, jasaQty:parseInt(s.jasa.qty)||0, jasaHarga:parseAngka(s.jasa.harga) };
-  showToast("⏳ Mengirim...", "#6b7280");
+  showToast("⏳ Mengirim...","#6b7280");
   try {
-    await fetch(url, { method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+    await fetch(url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
     bootstrap.Modal.getInstance(document.getElementById("modalSheets"))?.hide();
-    showToast("✓ Berhasil dikirim ke Sheets!", "#34a853");
-  } catch(e) { showToast("❌ Gagal: "+e.message, "#ef4444"); }
+    showToast("✓ Berhasil dikirim ke Sheets!","#34a853");
+  } catch(e) { showToast("❌ Gagal: "+e.message,"#ef4444"); }
+}
+
+// ── Admin Panel ───────────────────────────────────────
+document.getElementById("modalAdmin").addEventListener("show.bs.modal", loadAdminPanel);
+
+async function loadAdminPanel() {
+  const el = document.getElementById("adminContent");
+  el.innerHTML = `<div class="text-center py-5" style="color:#9ca3af">
+    <div class="spinner-border spinner-border-sm me-2"></div>Memuat data semua user...</div>`;
+  try {
+    const snap = await db.ref("users").get();
+    if (!snap.exists()) { el.innerHTML = `<p class="text-center text-muted py-4">Belum ada user terdaftar.</p>`; return; }
+    const users = snap.val();
+    const userEntries = Object.entries(users).filter(([u]) => u !== "admin");
+
+    if (!userEntries.length) { el.innerHTML = `<p class="text-center text-muted py-4">Belum ada user selain admin.</p>`; return; }
+
+    let html = `<div style="padding:4px 0">
+      <div style="font-size:11px;font-weight:700;color:#9ca3af;letter-spacing:1px;margin-bottom:12px;padding:0 4px">
+        ${userEntries.length} USER TERDAFTAR
+      </div>`;
+
+    for (const [uname, udata] of userEntries) {
+      const appSnap = await db.ref(`users/${uname}/appData`).get();
+      const appData = appSnap.val();
+      const pelList = appData?.pelangganList || [];
+      let grandAll  = 0;
+      if (appData?.data) {
+        Object.values(appData.data).forEach(d => {
+          grandAll += (d.material||[]).reduce((s,i)=>s+i.qty*i.harga,0)
+                    + (d.aksesoris||[]).reduce((s,i)=>s+i.qty*i.harga,0)
+                    + (parseInt(d.jasa?.qty)||0) * parseAngka(d.jasa?.harga||"");
+        });
+      }
+
+      html += `
+      <div style="background:#f8faff;border-radius:12px;margin-bottom:14px;border:1px solid #e5e7eb;overflow:hidden">
+        <!-- Header User -->
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #e5e7eb;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-weight:700;font-size:14px;color:#1e3a8a">👤 ${udata.nama||uname}</div>
+            <div style="font-size:11px;color:#9ca3af">@${uname} &nbsp;·&nbsp; Daftar: ${udata.createdAt ? new Date(udata.createdAt).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"}) : "-"}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="text-align:right">
+              <div style="font-size:11px;color:#6b7280">${pelList.length} pelanggan</div>
+              <div style="font-size:13px;font-weight:800;color:#2563eb">${formatRp(grandAll)}</div>
+            </div>
+            <button onclick="adminHapusUser('${uname}','${udata.nama||uname}')"
+              style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">
+              🗑 Hapus User
+            </button>
+          </div>
+        </div>
+
+        <!-- Daftar Pelanggan -->
+        <div style="padding:12px 16px" id="pelDiv_${uname}">`;
+
+      if (pelList.length) {
+        pelList.forEach(p => {
+          const d = appData?.data?.[p.id];
+          const m = (d?.material||[]).reduce((s,i)=>s+i.qty*i.harga,0);
+          const a = (d?.aksesoris||[]).reduce((s,i)=>s+i.qty*i.harga,0);
+          const j = (parseInt(d?.jasa?.qty)||0) * parseAngka(d?.jasa?.harga||"");
+          const total = m+a+j;
+          html += `
+          <div id="pelRow_${p.id}" style="display:flex;justify-content:space-between;align-items:center;background:white;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+            <div>
+              <div style="font-weight:600;font-size:13px;color:#1f2937">📋 ${p.nama}</div>
+              <div style="font-size:11px;color:#6b7280">
+                M: ${formatRp(m)} &nbsp;|&nbsp; A: ${formatRp(a)} &nbsp;|&nbsp; J: ${formatRp(j)}
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="font-weight:700;color:#2563eb;font-size:13px">${formatRp(total)}</div>
+              <button onclick="adminHapusPelanggan('${uname}','${p.id}','${p.nama.replace(/'/g,"\\'")}')"
+                style="background:#fff1f2;color:#f43f5e;border:1px solid #fecaca;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer">
+                × Hapus
+              </button>
+            </div>
+          </div>`;
+        });
+      } else {
+        html += `<div style="font-size:12px;color:#9ca3af;font-style:italic;padding:4px 0">Belum ada data pelanggan</div>`;
+      }
+
+      html += `</div></div>`; // tutup pelDiv & user card
+    }
+
+    html += `</div>`;
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div class="alert alert-danger m-3">Error: ${e.message}</div>`;
+  }
+}
+
+async function adminHapusUser(uname, namaUser) {
+  if (!confirm(`Hapus user "${namaUser}" (@${uname}) beserta SEMUA data pelanggannya?\n\nTindakan ini tidak bisa dibatalkan!`)) return;
+  try {
+    await db.ref(`users/${uname}`).remove();
+    showToast(`✓ User @${uname} dihapus`, "#ef4444");
+    loadAdminPanel(); // refresh panel
+  } catch(e) {
+    showToast("❌ Gagal hapus: "+e.message, "#ef4444");
+  }
+}
+
+async function adminHapusPelanggan(uname, pelId, pelNama) {
+  if (!confirm(`Hapus pelanggan "${pelNama}" dari akun @${uname}?`)) return;
+  try {
+    // Hapus dari pelangganList
+    const snap = await db.ref(`users/${uname}/appData`).get();
+    const appData = snap.val();
+    if (!appData) return;
+    appData.pelangganList = (appData.pelangganList||[]).filter(p => p.id !== pelId);
+    if (appData.data) delete appData.data[pelId];
+    await db.ref(`users/${uname}/appData`).set(appData);
+
+    // Hapus baris dari DOM langsung (tanpa reload penuh)
+    const row = document.getElementById(`pelRow_${pelId}`);
+    if (row) {
+      row.style.transition = "opacity .3s, transform .3s";
+      row.style.opacity = "0"; row.style.transform = "translateX(10px)";
+      setTimeout(() => { row.remove(); }, 300);
+    }
+    showToast(`✓ Pelanggan "${pelNama}" dihapus`, "#6b7280");
+  } catch(e) {
+    showToast("❌ Gagal hapus: "+e.message, "#ef4444");
+  }
 }
 
 // ── Init ──────────────────────────────────────────────
@@ -736,7 +1028,6 @@ document.getElementById("noUpb").addEventListener("input", hitungSemua);
 const savedUrl = localStorage.getItem("sheetsUrl");
 if (savedUrl) document.getElementById("sheetsUrl").value = savedUrl;
 </script>
-
 </div><!-- /#app -->
 
 <script>

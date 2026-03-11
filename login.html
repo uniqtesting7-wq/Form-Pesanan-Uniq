@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — UNIQ CELL</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      min-height:100vh; display:flex; align-items:center; justify-content:center;
+      background:linear-gradient(135deg,#0f1f5c 0%,#1e3a8a 50%,#1d4ed8 100%);
+      font-family:'Segoe UI',sans-serif; overflow:hidden;
+    }
+
+    /* ── BG Circles ── */
+    .bg-circle {
+      position:fixed; border-radius:50%; opacity:.07; background:white; pointer-events:none;
+    }
+
+    /* ── Card ── */
+    .card {
+      width:100%; max-width:400px; margin:20px;
+      background:white; border-radius:20px;
+      box-shadow:0 24px 64px rgba(0,0,0,0.25);
+      overflow:hidden; opacity:0;
+    }
+    .card-header {
+      background:linear-gradient(135deg,#1e3a8a,#2563eb);
+      padding:36px 32px 28px; text-align:center; color:white;
+    }
+    .card-header .icon { font-size:44px; margin-bottom:10px; display:block; }
+    .card-header .brand { font-size:26px; font-weight:900; letter-spacing:5px; }
+    .card-header .brand span { color:#93c5fd; }
+    .card-header .tagline { font-size:10px; letter-spacing:2px; opacity:.6; margin-top:4px; text-transform:uppercase; }
+    .card-body { padding:32px; }
+
+    /* ── Tab Switch ── */
+    .tab-switch {
+      display:flex; background:#f1f5f9; border-radius:10px; padding:4px; margin-bottom:24px;
+    }
+    .tab-switch button {
+      flex:1; padding:8px; border:none; border-radius:7px;
+      font-size:13px; font-weight:600; cursor:pointer;
+      background:transparent; color:#94a3b8; transition:all .2s;
+    }
+    .tab-switch button.active { background:white; color:#1e3a8a; box-shadow:0 1px 4px rgba(0,0,0,0.1); }
+
+    /* ── Form ── */
+    .form-group { margin-bottom:16px; }
+    .form-group label { display:block; font-size:11px; font-weight:700; color:#6b7280; letter-spacing:1px; margin-bottom:6px; text-transform:uppercase; }
+    .form-group input {
+      width:100%; padding:11px 14px; border:1.5px solid #e5e7eb;
+      border-radius:10px; font-size:14px; outline:none; transition:all .2s;
+      background:#fafafa; color:#1f2937;
+    }
+    .form-group input:focus { border-color:#2563eb; background:white; box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
+    .form-group .input-wrap { position:relative; }
+    .form-group .input-wrap input { padding-right:42px; }
+    .form-group .toggle-pw {
+      position:absolute; right:12px; top:50%; transform:translateY(-50%);
+      background:none; border:none; cursor:pointer; color:#9ca3af; font-size:16px; padding:4px;
+    }
+    .form-group .toggle-pw:hover { color:#2563eb; }
+
+    /* ── Button ── */
+    .btn-submit {
+      width:100%; padding:12px; border:none; border-radius:10px;
+      background:linear-gradient(135deg,#1e3a8a,#2563eb);
+      color:white; font-size:14px; font-weight:700;
+      cursor:pointer; transition:all .2s; margin-top:4px;
+      letter-spacing:0.5px;
+    }
+    .btn-submit:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(37,99,235,0.35); }
+    .btn-submit:active { transform:translateY(0); }
+    .btn-submit:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+
+    /* ── Alert ── */
+    .alert {
+      padding:10px 14px; border-radius:8px; font-size:12px;
+      font-weight:600; margin-bottom:16px; display:none;
+    }
+    .alert.error   { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
+    .alert.success { background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; }
+    .alert.show    { display:block; }
+
+    /* ── Footer ── */
+    .card-footer { padding:16px 32px; background:#f8faff; text-align:center; border-top:1px solid #f1f5f9; }
+    .card-footer p { font-size:11px; color:#9ca3af; }
+
+    /* ── Spinner ── */
+    .spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,0.4); border-top-color:white; border-radius:50%; animation:spin .6s linear infinite; margin-right:6px; vertical-align:middle; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    @media (max-width:440px) {
+      .card-body { padding:24px 20px; }
+      .card-header { padding:28px 20px 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-circle" style="width:600px;height:600px;top:-250px;right:-200px"></div>
+<div class="bg-circle" style="width:400px;height:400px;bottom:-150px;left:-100px"></div>
+<div class="bg-circle" style="width:200px;height:200px;top:40%;left:5%"></div>
+
+<div class="card" id="card">
+  <div class="card-header">
+    <span class="icon" id="cardIcon">📦</span>
+    <div class="brand"><span>UNIQ</span> CELL</div>
+    <div class="tagline">Order Management System</div>
+  </div>
+  <div class="card-body">
+
+    <!-- Tab Switch -->
+    <div class="tab-switch">
+      <button class="active" id="tabLogin" onclick="switchTab('login')">Masuk</button>
+      <button id="tabRegister" onclick="switchTab('register')">Daftar</button>
+    </div>
+
+    <div id="alertBox" class="alert"></div>
+
+    <!-- Form Login -->
+    <div id="formLogin">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="Masukkan username" autocomplete="username"
+          onkeydown="if(event.key==='Enter') document.getElementById('loginPass').focus()"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <div class="input-wrap">
+          <input type="password" id="loginPass" placeholder="Masukkan password" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter') doLogin()"/>
+          <button class="toggle-pw" onclick="togglePw('loginPass',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <button class="btn-submit" id="btnLogin" onclick="doLogin()">Masuk</button>
+    </div>
+
+    <!-- Form Register -->
+    <div id="formRegister" style="display:none">
+      <div class="form-group">
+        <label>Nama Lengkap</label>
+        <input type="text" id="regNama" placeholder="contoh: Ahmad Rizki"/>
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="regUser" placeholder="huruf kecil, tanpa spasi" autocomplete="username"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <div class="input-wrap">
+          <input type="password" id="regPass" placeholder="Minimal 6 karakter" autocomplete="new-password"
+            onkeydown="if(event.key==='Enter') doRegister()"/>
+          <button class="toggle-pw" onclick="togglePw('regPass',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <button class="btn-submit" id="btnRegister" onclick="doRegister()">Buat Akun</button>
+    </div>
+
+  </div>
+  <div class="card-footer">
+    <p>UNIQ CELL &copy; 2026 — Sistem Internal</p>
+  </div>
+</div>
+
+<script>
+// ── Firebase ───────────────────────────────────────────
+firebase.initializeApp({
+  apiKey: "AIzaSyBjTKyBkKdZ9d1p2XS2PrLMpHsvvqK0jYk",
+  authDomain: "form-pesanan-uniq.firebaseapp.com",
+  databaseURL: "https://form-pesanan-uniq-default-rtdb.firebaseio.com",
+  projectId: "form-pesanan-uniq",
+  storageBucket: "form-pesanan-uniq.firebasestorage.app",
+  messagingSenderId: "507202084583",
+  appId: "1:507202084583:web:b097401aefce60bd03cc42"
+});
+const db = firebase.database();
+
+// ── GSAP Card Entrance ─────────────────────────────────
+gsap.to("#card", { opacity:1, y:0, duration:.7, ease:"power3.out", delay:.2 });
+gsap.from("#cardIcon", { scale:.3, rotation:-30, duration:.8, ease:"back.out(2)", delay:.3 });
+
+// ── Util ───────────────────────────────────────────────
+function showAlert(msg, type="error") {
+  const el = document.getElementById("alertBox");
+  el.textContent = msg;
+  el.className = `alert ${type} show`;
+  gsap.from(el, { y:-8, opacity:0, duration:.25 });
+}
+function hideAlert() {
+  document.getElementById("alertBox").className = "alert";
+}
+function hashPw(pw) {
+  // Simple hash — cukup untuk sistem internal
+  let h = 0;
+  for (let i = 0; i < pw.length; i++) h = (Math.imul(31, h) + pw.charCodeAt(i)) | 0;
+  return Math.abs(h).toString(36) + pw.length.toString(36);
+}
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  const show = inp.type === "password";
+  inp.type = show ? "text" : "password";
+  btn.textContent = show ? "🙈" : "👁";
+}
+function setLoading(btnId, loading, text) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading ? `<span class="spinner"></span>${text}` : text;
+}
+
+// ── Tab Switch ─────────────────────────────────────────
+function switchTab(tab) {
+  hideAlert();
+  const isLogin = tab === "login";
+  document.getElementById("formLogin").style.display    = isLogin ? "block" : "none";
+  document.getElementById("formRegister").style.display = isLogin ? "none"  : "block";
+  document.getElementById("tabLogin").classList.toggle("active", isLogin);
+  document.getElementById("tabRegister").classList.toggle("active", !isLogin);
+  gsap.from(isLogin ? "#formLogin" : "#formRegister", { opacity:0, x: isLogin ? -12 : 12, duration:.25 });
+}
+
+// ── Login ──────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById("loginUser").value.trim().toLowerCase();
+  const password = document.getElementById("loginPass").value;
+  if (!username || !password) { showAlert("⚠️ Isi username dan password dulu!"); return; }
+
+  setLoading("btnLogin", true, "Memverifikasi...");
+  hideAlert();
+
+  try {
+    const snap = await db.ref(`users/${username}`).get();
+    if (!snap.exists()) { showAlert("❌ Username tidak ditemukan!"); setLoading("btnLogin", false, "Masuk"); return; }
+
+    const user = snap.val();
+    if (user.password !== hashPw(password)) { showAlert("❌ Password salah!"); setLoading("btnLogin", false, "Masuk"); return; }
+
+    // Simpan sesi
+    sessionStorage.setItem("uniqUser", JSON.stringify({
+      username, nama: user.nama, role: user.role || "user"
+    }));
+
+    showAlert("✓ Login berhasil! Mengalihkan...", "success");
+    gsap.to("#card", { y:-20, opacity:0, duration:.5, ease:"power2.in", delay:.6,
+      onComplete: () => window.location.href = "form-pemesan.html"
+    });
+  } catch(e) {
+    showAlert("❌ Error: " + e.message);
+    setLoading("btnLogin", false, "Masuk");
+  }
+}
+
+// ── Register ───────────────────────────────────────────
+async function doRegister() {
+  const nama     = document.getElementById("regNama").value.trim();
+  const username = document.getElementById("regUser").value.trim().toLowerCase().replace(/\s+/g,"");
+  const password = document.getElementById("regPass").value;
+
+  if (!nama)           { showAlert("⚠️ Isi nama lengkap dulu!"); return; }
+  if (!username)       { showAlert("⚠️ Isi username dulu!"); return; }
+  if (username.length < 3) { showAlert("⚠️ Username minimal 3 karakter!"); return; }
+  if (!/^[a-z0-9_]+$/.test(username)) { showAlert("⚠️ Username hanya huruf kecil, angka, dan _"); return; }
+  if (password.length < 6) { showAlert("⚠️ Password minimal 6 karakter!"); return; }
+  if (username === "admin") { showAlert("⚠️ Username 'admin' tidak bisa dipakai!"); return; }
+
+  setLoading("btnRegister", true, "Membuat akun...");
+  hideAlert();
+
+  try {
+    const snap = await db.ref(`users/${username}`).get();
+    if (snap.exists()) { showAlert("❌ Username sudah dipakai!"); setLoading("btnRegister", false, "Buat Akun"); return; }
+
+    await db.ref(`users/${username}`).set({
+      nama, username, password: hashPw(password),
+      role: "user",
+      createdAt: new Date().toISOString()
+    });
+
+    showAlert("✓ Akun berhasil dibuat! Silakan login.", "success");
+    setLoading("btnRegister", false, "Buat Akun");
+    setTimeout(() => {
+      switchTab("login");
+      document.getElementById("loginUser").value = username;
+    }, 1200);
+  } catch(e) {
+    showAlert("❌ Error: " + e.message);
+    setLoading("btnRegister", false, "Buat Akun");
+  }
+}
+
+// ── Cek sudah login ────────────────────────────────────
+const sess = sessionStorage.getItem("uniqUser");
+if (sess) window.location.href = "form-pemesan.html";
+</script>
+</body>
+</html>
