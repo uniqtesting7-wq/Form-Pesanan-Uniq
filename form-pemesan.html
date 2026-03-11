@@ -1,47 +1,41 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Form Pemesan</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
-    body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
-    .header-card {
-      background: linear-gradient(135deg, #1e3a8a, #2563eb);
-      border-radius: 14px; color: white; padding: 28px 32px; margin-bottom: 20px;
-    }
-    .section-card {
-      background: white; border-radius: 12px; padding: 24px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 20px;
-    }
-    .section-label { font-size: 11px; font-weight: 700; color: #6b7280; letter-spacing: 1.5px; margin-bottom: 14px; }
-    .table thead th { background: #f8faff; font-size: 11px; font-weight: 700; color: #6b7280; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb; }
-    .table td { vertical-align: middle; font-size: 13px; }
-    .table tbody tr:hover { background: #f8faff; }
-    .subtotal { font-weight: 700; color: #1e3a8a; }
-    .subtotal.zero { color: #d1d5db; }
-    .grand-total-card { background: linear-gradient(135deg, #1e3a8a, #2563eb); border-radius: 12px; color: white; padding: 20px 28px; }
-    input.form-control:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-    .btn-add-row { background: #eff6ff; color: #2563eb; border: none; width: 30px; height: 30px; border-radius: 6px; font-size: 18px; line-height: 1; font-weight: 700; cursor: pointer; }
-    .btn-add-row:hover { background: #dbeafe; color: #1e3a8a; }
-    .btn-remove { background: #fff1f2; color: #f43f5e; border: none; width: 30px; height: 30px; border-radius: 6px; font-size: 16px; line-height: 1; cursor: pointer; }
-    .btn-remove:hover { background: #ffe4e6; }
-    .action-btns { display: flex; gap: 4px; justify-content: center; }
-    .total-row td { font-weight: 700; font-size: 14px; color: #1e3a8a; border-top: 2px solid #e5e7eb !important; }
-    #toast { position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: #1e3a8a; color: white;
-      padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
-      display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.18); }
-    #toast.show { display: block; animation: fadeInUp .3s ease; }
-    @keyframes fadeInUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-    .script-box { background:#f8faff; border-radius:8px; padding:10px; font-size:11px;
-      font-family:monospace; border:1px solid #e5e7eb; white-space:pre-wrap; max-height:160px; overflow-y:auto; }
-    @media print {
-      .no-print { display: none !important; }
-      body { background: white; }
-      .section-card, .header-card, .grand-total-card { box-shadow: none; }
-    }
+    body { background:#f0f4f8; font-family:'Segoe UI',sans-serif; }
+    .header-card { background:linear-gradient(135deg,#1e3a8a,#2563eb); border-radius:14px; color:white; padding:28px 32px; margin-bottom:20px; }
+    .section-card { background:white; border-radius:12px; padding:24px; box-shadow:0 1px 4px rgba(0,0,0,0.07); margin-bottom:20px; }
+    .section-label { font-size:11px; font-weight:700; color:#6b7280; letter-spacing:1.5px; margin-bottom:14px; }
+    .table thead th { background:#f8faff; font-size:11px; font-weight:700; color:#6b7280; letter-spacing:0.5px; border-bottom:2px solid #e5e7eb; }
+    .table td { vertical-align:middle; font-size:13px; }
+    .table tbody tr:hover { background:#f8faff; }
+    .subtotal { font-weight:700; color:#1e3a8a; }
+    .subtotal.zero { color:#d1d5db; }
+    .grand-total-card { background:linear-gradient(135deg,#1e3a8a,#2563eb); border-radius:12px; color:white; padding:20px 28px; }
+    input.form-control:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
+    .btn-add-row { background:#eff6ff; color:#2563eb; border:none; width:30px; height:30px; border-radius:6px; font-size:18px; line-height:1; font-weight:700; cursor:pointer; }
+    .btn-add-row:hover { background:#dbeafe; }
+    .btn-remove { background:#fff1f2; color:#f43f5e; border:none; width:30px; height:30px; border-radius:6px; font-size:16px; line-height:1; cursor:pointer; }
+    .btn-remove:hover { background:#ffe4e6; }
+    .action-btns { display:flex; gap:4px; justify-content:center; }
+    .total-row td { font-weight:700; font-size:14px; color:#1e3a8a; border-top:2px solid #e5e7eb !important; }
+    .sync-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:5px; }
+    .sync-dot.synced  { background:#4ade80; }
+    .sync-dot.syncing { background:#fbbf24; animation:pulse 1s infinite; }
+    .sync-dot.error   { background:#f87171; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    #toast { position:fixed; bottom:24px; right:24px; z-index:9999; background:#1e3a8a; color:white; padding:10px 18px; border-radius:10px; font-size:13px; font-weight:600; display:none; box-shadow:0 4px 16px rgba(0,0,0,0.18); }
+    #toast.show { display:block; animation:fadeUp .3s ease; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .script-box { background:#f8faff; border-radius:8px; padding:10px; font-size:11px; font-family:monospace; border:1px solid #e5e7eb; white-space:pre-wrap; max-height:160px; overflow-y:auto; }
+    @media print { .no-print{display:none !important;} body{background:white;} }
   </style>
 </head>
 <body>
@@ -52,10 +46,12 @@
     <div>
       <div style="font-size:11px;letter-spacing:3px;opacity:.7">FORM PEMESAN</div>
       <div style="font-size:24px;font-weight:800">📦 Order List</div>
-      <div style="font-size:10px;opacity:.6;margin-top:4px" class="no-print">● Auto-save aktif</div>
+      <div style="font-size:10px;margin-top:5px" class="no-print" id="syncStatus">
+        <span class="sync-dot syncing"></span>Menyambungkan Firebase...
+      </div>
     </div>
     <div class="no-print d-flex flex-wrap gap-2">
-      <button class="btn btn-light btn-sm fw-semibold" onclick="simpanLokal()">
+      <button class="btn btn-light btn-sm fw-semibold" onclick="simpanManual()">
         <i class="bi bi-floppy me-1"></i>Simpan
       </button>
       <button class="btn btn-sm fw-semibold" style="background:#25D366;color:white;border:none" onclick="kirimWA()">
@@ -77,15 +73,15 @@
     <div class="row g-3">
       <div class="col-md-6">
         <label class="form-label" style="font-size:11px;color:#9ca3af">Nama Pelanggan</label>
-        <input type="text" class="form-control form-control-sm" id="namaPelanggan" value="Ko Danny Toko Biru" oninput="autoSave()"/>
+        <input type="text" class="form-control form-control-sm" id="namaPelanggan" oninput="autoSave()"/>
       </div>
       <div class="col-md-6">
         <label class="form-label" style="font-size:11px;color:#9ca3af">No. Order</label>
-        <input type="text" class="form-control form-control-sm" id="noOrder" value="PT JL0001269" oninput="autoSave()"/>
+        <input type="text" class="form-control form-control-sm" id="noOrder" oninput="autoSave()"/>
       </div>
       <div class="col-md-6">
         <label class="form-label" style="font-size:11px;color:#9ca3af">No. UPB</label>
-        <input type="text" class="form-control form-control-sm" id="noUpb" value="UPB JL00000481" oninput="autoSave()"/>
+        <input type="text" class="form-control form-control-sm" id="noUpb" oninput="autoSave()"/>
       </div>
       <div class="col-md-6">
         <label class="form-label" style="font-size:11px;color:#9ca3af">Tanggal</label>
@@ -103,8 +99,7 @@
     <div class="table-responsive">
       <table class="table table-borderless mb-0">
         <thead><tr>
-          <th style="width:36px">#</th>
-          <th>NAMA BARANG</th>
+          <th style="width:36px">#</th><th>NAMA BARANG</th>
           <th style="width:80px;text-align:center">QTY</th>
           <th style="width:130px;text-align:right">HARGA</th>
           <th style="width:130px;text-align:right">SUBTOTAL</th>
@@ -129,8 +124,7 @@
     <div class="table-responsive">
       <table class="table table-borderless mb-0">
         <thead><tr>
-          <th style="width:36px">#</th>
-          <th>NAMA BARANG</th>
+          <th style="width:36px">#</th><th>NAMA BARANG</th>
           <th style="width:80px;text-align:center">QTY</th>
           <th style="width:130px;text-align:right">HARGA</th>
           <th style="width:130px;text-align:right">SUBTOTAL</th>
@@ -151,13 +145,13 @@
     <div class="section-label">👷 JASA PEMASANGAN</div>
     <div class="row g-2 align-items-center">
       <div class="col-md-5">
-        <input type="text" class="form-control form-control-sm" id="jasaDesc" value="Jasa Pemasangan + Setting" oninput="hitungSemua();autoSave()"/>
+        <input type="text" class="form-control form-control-sm" id="jasaDesc" oninput="hitungSemua();autoSave()"/>
       </div>
       <div class="col-md-2">
-        <input type="number" class="form-control form-control-sm text-center" id="jasaQty" value="16" min="0" oninput="hitungSemua();autoSave()"/>
+        <input type="number" class="form-control form-control-sm text-center" id="jasaQty" min="0" oninput="hitungSemua();autoSave()"/>
       </div>
       <div class="col-md-2">
-        <input type="text" class="form-control form-control-sm text-end" id="jasaHarga" value="200.000" oninput="hitungSemua();autoSave()"/>
+        <input type="text" class="form-control form-control-sm text-end" id="jasaHarga" oninput="hitungSemua();autoSave()"/>
       </div>
       <div class="col-md-3 text-end fw-bold" style="color:#1e3a8a;font-size:14px" id="jasaSubtotal">Rp 0</div>
     </div>
@@ -171,10 +165,9 @@
     </div>
     <div style="font-size:28px;font-weight:800" id="grandTotal">Rp 0</div>
   </div>
-  <div class="text-center mt-3 no-print" style="color:#9ca3af;font-size:11px">Data tersimpan otomatis di browser ini</div>
+  <div class="text-center mt-3 no-print" style="color:#9ca3af;font-size:11px">Sinkron otomatis semua perangkat</div>
 </div>
 
-<!-- Toast -->
 <div id="toast"></div>
 
 <!-- Modal Google Sheets -->
@@ -187,16 +180,12 @@
       </div>
       <div class="modal-body">
         <div class="alert alert-info py-2 px-3 mb-3" style="font-size:12px;border-radius:8px">
-          <strong>Setup sekali saja:</strong><br>
-          1. Buka <a href="https://sheets.google.com" target="_blank">Google Sheets</a> → buat spreadsheet baru<br>
-          2. Klik <strong>Extensions → Apps Script</strong><br>
-          3. Hapus kode default, paste script di bawah<br>
-          4. Klik <strong>Deploy → New deployment → Web app</strong><br>
-          5. Execute as: <em>Me</em> &nbsp;|&nbsp; Who has access: <em>Anyone</em><br>
-          6. Klik Deploy → copy URL → paste di kolom bawah
+          1. Buka <a href="https://sheets.google.com" target="_blank">Google Sheets</a> → spreadsheet baru<br>
+          2. <strong>Extensions → Apps Script</strong> → paste script → Deploy → Web app<br>
+          3. Execute as: <em>Me</em> | Access: <em>Anyone</em> → copy URL
         </div>
         <div class="mb-3">
-          <label class="form-label" style="font-size:11px;font-weight:700;color:#6b7280">Script Apps Script:</label>
+          <label class="form-label" style="font-size:11px;font-weight:700;color:#6b7280">Script:</label>
           <div class="script-box" id="appsScriptCode"></div>
           <button class="btn btn-sm btn-outline-secondary mt-2" onclick="copyScript()">
             <i class="bi bi-clipboard me-1"></i>Copy Script
@@ -206,7 +195,6 @@
           <label class="form-label" style="font-size:11px;font-weight:700;color:#6b7280">Web App URL:</label>
           <input type="text" class="form-control form-control-sm" id="sheetsUrl"
             placeholder="https://script.google.com/macros/s/....../exec"/>
-          <div style="font-size:10px;color:#9ca3af;margin-top:4px">URL disimpan otomatis, tidak perlu isi ulang</div>
         </div>
       </div>
       <div class="modal-footer border-0 pt-0">
@@ -221,8 +209,21 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// ── Firebase Config ────────────────────────────────────
+firebase.initializeApp({
+  apiKey: "AIzaSyBjTKyBkKdZ9d1p2XS2PrLMpHsvvqK0jYk",
+  authDomain: "form-pesanan-uniq.firebaseapp.com",
+  databaseURL: "https://form-pesanan-uniq-default-rtdb.firebaseio.com",
+  projectId: "form-pesanan-uniq",
+  storageBucket: "form-pesanan-uniq.firebasestorage.app",
+  messagingSenderId: "507202084583",
+  appId: "1:507202084583:web:b097401aefce60bd03cc42"
+});
+const db = firebase.database();
+const dbRef = db.ref("formPemesan");
+
 // ── Data Default ───────────────────────────────────────
-const DEFAULT_MATERIAL = [
+const DEF_MATERIAL = [
   { nama:"Camera Analog Hikvison 16D0T EXLPF", qty:14,  harga:365000 },
   { nama:"Camera Analog Hikvison 10K0T LPFS",  qty:2,   harga:1154000 },
   { nama:"Hardisk 2TB Skyhawk Survilance",      qty:1,   harga:1965000 },
@@ -240,18 +241,21 @@ const DEFAULT_MATERIAL = [
   { nama:"Kabel Ties Besar",                    qty:1,   harga:0 },
   { nama:"Solasi National",                     qty:3,   harga:0 },
 ];
-const DEFAULT_AKSESORIS = [
+const DEF_AKSESORIS = [
   { nama:"Dc Male",                    qty:16, harga:3500 },
   { nama:"Bnc Drat",                   qty:32, harga:5000 },
   { nama:"Rj45",                       qty:6,  harga:2500 },
   { nama:"Matsui Steker arde MT-3000", qty:1,  harga:5000 },
 ];
+const DEF_JASA = { desc:"Jasa Pemasangan + Setting", qty:16, harga:200000 };
 
-let dataMaterial  = JSON.parse(JSON.stringify(DEFAULT_MATERIAL));
-let dataAksesoris = JSON.parse(JSON.stringify(DEFAULT_AKSESORIS));
+let dataMaterial  = JSON.parse(JSON.stringify(DEF_MATERIAL));
+let dataAksesoris = JSON.parse(JSON.stringify(DEF_AKSESORIS));
+let saveTimer     = null;
+let isFromFirebase = false; // flag agar listener tidak loop
 
 // ── Util ───────────────────────────────────────────────
-const formatRp  = n => "Rp " + Number(n||0).toLocaleString("id-ID");
+const formatRp   = n => "Rp " + Number(n||0).toLocaleString("id-ID");
 const parseAngka = s => parseInt(String(s).replace(/[^0-9]/g,""))||0;
 
 function showToast(msg, color="#1e3a8a") {
@@ -261,56 +265,88 @@ function showToast(msg, color="#1e3a8a") {
   setTimeout(() => t.classList.remove("show"), 2800);
 }
 
-// ── localStorage ──────────────────────────────────────
-function autoSave() {
+function setSyncStatus(state, msg) {
+  const el = document.getElementById("syncStatus");
+  if (el) el.innerHTML = `<span class="sync-dot ${state}"></span>${msg}`;
+}
+
+// ── Ambil semua nilai form ─────────────────────────────
+function ambilState() {
+  return {
+    pelanggan: {
+      nama:    document.getElementById("namaPelanggan").value,
+      noOrder: document.getElementById("noOrder").value,
+      noUpb:   document.getElementById("noUpb").value,
+      tanggal: document.getElementById("tanggal").value,
+    },
+    material:  dataMaterial,
+    aksesoris: dataAksesoris,
+    jasa: {
+      desc:  document.getElementById("jasaDesc").value,
+      qty:   document.getElementById("jasaQty").value,
+      harga: document.getElementById("jasaHarga").value,
+    }
+  };
+}
+
+// ── Isi form dari object ───────────────────────────────
+function isiForm(s) {
+  if (!s) return;
+  if (s.pelanggan) {
+    document.getElementById("namaPelanggan").value = s.pelanggan.nama    || "";
+    document.getElementById("noOrder").value       = s.pelanggan.noOrder || "";
+    document.getElementById("noUpb").value         = s.pelanggan.noUpb   || "";
+    document.getElementById("tanggal").value       = s.pelanggan.tanggal || "";
+  }
+  if (s.material  && s.material.length)  dataMaterial  = s.material;
+  if (s.aksesoris && s.aksesoris.length) dataAksesoris = s.aksesoris;
+  if (s.jasa) {
+    document.getElementById("jasaDesc").value  = s.jasa.desc  || DEF_JASA.desc;
+    document.getElementById("jasaQty").value   = s.jasa.qty   || DEF_JASA.qty;
+    document.getElementById("jasaHarga").value = s.jasa.harga || DEF_JASA.harga.toLocaleString("id-ID");
+  }
+  renderTabel("bodyMaterial",  dataMaterial);
+  renderTabel("bodyAksesoris", dataAksesoris);
   hitungSemua();
-  try {
-    localStorage.setItem("formPemesan", JSON.stringify({
-      pelanggan: {
-        nama:    document.getElementById("namaPelanggan").value,
-        noOrder: document.getElementById("noOrder").value,
-        noUpb:   document.getElementById("noUpb").value,
-        tanggal: document.getElementById("tanggal").value,
-      },
-      material:  dataMaterial,
-      aksesoris: dataAksesoris,
-      jasa: {
-        desc:  document.getElementById("jasaDesc").value,
-        qty:   document.getElementById("jasaQty").value,
-        harga: document.getElementById("jasaHarga").value,
-      }
-    }));
-  } catch(e) {}
 }
 
-function simpanLokal() {
-  autoSave();
-  showToast("✓ Tersimpan di browser!", "#22c55e");
+// ── Firebase: simpan ──────────────────────────────────
+function simpanKeFirebase() {
+  setSyncStatus("syncing", "Menyimpan...");
+  dbRef.set(ambilState())
+    .then(() => setSyncStatus("synced", "Tersinkron real-time ☁️"))
+    .catch(e => { setSyncStatus("error", "Gagal sync"); showToast("❌ " + e.message, "#ef4444"); });
 }
 
-function muatData() {
-  try {
-    const raw = localStorage.getItem("formPemesan");
-    if (!raw) return;
-    const s = JSON.parse(raw);
-    if (s.pelanggan) {
-      document.getElementById("namaPelanggan").value = s.pelanggan.nama    || "";
-      document.getElementById("noOrder").value       = s.pelanggan.noOrder || "";
-      document.getElementById("noUpb").value         = s.pelanggan.noUpb   || "";
-      document.getElementById("tanggal").value       = s.pelanggan.tanggal || "";
-    }
-    if (s.material  && s.material.length)  dataMaterial  = s.material;
-    if (s.aksesoris && s.aksesoris.length) dataAksesoris = s.aksesoris;
-    if (s.jasa) {
-      document.getElementById("jasaDesc").value  = s.jasa.desc  || "";
-      document.getElementById("jasaQty").value   = s.jasa.qty   || 0;
-      document.getElementById("jasaHarga").value = s.jasa.harga || "";
-    }
-    // Load sheets URL
-    const url = localStorage.getItem("sheetsUrl");
-    if (url) document.getElementById("sheetsUrl").value = url;
-  } catch(e) {}
+// ── Auto save dengan debounce ─────────────────────────
+function autoSave() {
+  if (isFromFirebase) return; // jangan save balik saat sedang load dari Firebase
+  hitungSemua();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(simpanKeFirebase, 1000);
 }
+
+function simpanManual() {
+  simpanKeFirebase();
+  showToast("✓ Tersimpan!", "#22c55e");
+}
+
+// ── Firebase: dengarkan perubahan real-time ───────────
+dbRef.on("value", (snap) => {
+  const data = snap.val();
+  if (data) {
+    isFromFirebase = true;
+    isiForm(data);
+    isFromFirebase = false;
+    setSyncStatus("synced", "Tersinkron real-time ☁️");
+  } else {
+    // Database kosong → upload data default
+    simpanKeFirebase();
+  }
+}, (err) => {
+  setSyncStatus("error", "❌ " + err.message);
+  showToast("Firebase error: " + err.message, "#ef4444");
+});
 
 // ── Render Tabel ───────────────────────────────────────
 function renderTabel(bodyId, data) {
@@ -322,22 +358,22 @@ function renderTabel(bodyId, data) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td style="color:#9ca3af;font-weight:600;font-size:11px">${i+1}</td>
-      <td><input type="text" class="form-control form-control-sm" value="${item.nama.replace(/"/g,'&quot;')}"
+      <td><input type="text" class="form-control form-control-sm"
+        value="${(item.nama||"").replace(/"/g,"&quot;")}"
         oninput="updateItem('${bodyId}',${i},'nama',this.value)"/></td>
-      <td><input type="number" class="form-control form-control-sm text-center" value="${item.qty}" min="0"
+      <td><input type="number" class="form-control form-control-sm text-center"
+        value="${item.qty||0}" min="0"
         oninput="updateItem('${bodyId}',${i},'qty',this.value)"/></td>
       <td><input type="text" class="form-control form-control-sm text-end"
-        value="${item.harga ? item.harga.toLocaleString('id-ID') : ''}"
+        value="${item.harga ? Number(item.harga).toLocaleString("id-ID") : ""}"
         oninput="updateItem('${bodyId}',${i},'harga',this.value)"/></td>
-      <td class="text-end subtotal ${item.qty*item.harga===0?'zero':''}" id="sub_${bodyId}_${i}">
-        ${formatRp(item.qty*item.harga)}
-      </td>
+      <td class="text-end subtotal ${item.qty*item.harga===0?"zero":""}" id="sub_${bodyId}_${i}">
+        ${formatRp(item.qty*item.harga)}</td>
       <td class="no-print">
         <div class="action-btns">
-          <button class="btn-remove" title="Hapus" onclick="hapusItem('${bodyId}',${i})">×</button>
-          ${isLast
-            ? `<button class="btn-add-row" title="Tambah item" onclick="tambahItem('${tipe}')">+</button>`
-            : '<div style="width:30px"></div>'}
+          <button class="btn-remove" onclick="hapusItem('${bodyId}',${i})">×</button>
+          ${isLast ? `<button class="btn-add-row" onclick="tambahItem('${tipe}')">+</button>`
+                   : '<div style="width:30px"></div>'}
         </div>
       </td>`;
     tbody.appendChild(tr);
@@ -353,20 +389,22 @@ function updateItem(bodyId, idx, field, val) {
   const sub = data[idx].qty * data[idx].harga;
   const el  = document.getElementById(`sub_${bodyId}_${idx}`);
   if (el) { el.textContent = formatRp(sub); el.className = "text-end subtotal "+(sub===0?"zero":""); }
-  hitungSemua(); autoSave();
+  autoSave();
 }
 
 function tambahItem(tipe) {
   const data   = tipe==="material" ? dataMaterial : dataAksesoris;
   const bodyId = tipe==="material" ? "bodyMaterial" : "bodyAksesoris";
   data.push({ nama:"", qty:1, harga:0 });
-  renderTabel(bodyId, data); autoSave();
+  renderTabel(bodyId, data);
+  autoSave();
 }
 
 function hapusItem(bodyId, idx) {
   const data = bodyId==="bodyMaterial" ? dataMaterial : dataAksesoris;
   data.splice(idx, 1);
-  renderTabel(bodyId, data); autoSave();
+  renderTabel(bodyId, data);
+  autoSave();
 }
 
 // ── Hitung Total ──────────────────────────────────────
@@ -386,35 +424,27 @@ function hitungSemua() {
 
 // ── WhatsApp ──────────────────────────────────────────
 function kirimWA() {
-  const nama    = document.getElementById("namaPelanggan").value;
-  const noOrder = document.getElementById("noOrder").value;
-  const noUpb   = document.getElementById("noUpb").value;
-  const tgl     = document.getElementById("tanggal").value;
-  const jasaQ   = parseInt(document.getElementById("jasaQty").value)||0;
-  const jasaH   = parseAngka(document.getElementById("jasaHarga").value);
-  const jasaD   = document.getElementById("jasaDesc").value;
-  const totalM  = dataMaterial.reduce((s,i)  => s+i.qty*i.harga, 0);
-  const totalA  = dataAksesoris.reduce((s,i) => s+i.qty*i.harga, 0);
-  const totalJ  = jasaQ * jasaH;
-  const grand   = totalM + totalA + totalJ;
+  const nama  = document.getElementById("namaPelanggan").value;
+  const noOrd = document.getElementById("noOrder").value;
+  const noUpb = document.getElementById("noUpb").value;
+  const tgl   = document.getElementById("tanggal").value;
+  const jasaQ = parseInt(document.getElementById("jasaQty").value)||0;
+  const jasaH = parseAngka(document.getElementById("jasaHarga").value);
+  const jasaD = document.getElementById("jasaDesc").value;
+  const totalM = dataMaterial.reduce((s,i)  => s+i.qty*i.harga, 0);
+  const totalA = dataAksesoris.reduce((s,i) => s+i.qty*i.harga, 0);
+  const totalJ = jasaQ*jasaH;
 
-  let msg = `📦 *ORDER LIST*\n━━━━━━━━━━━━━━━━\n`;
-  msg += `👤 *${nama}*\n📋 No. Order: ${noOrder}\n📋 No. UPB: ${noUpb}\n📅 ${tgl}\n\n`;
-
-  msg += `🔧 *Material Utama*\n`;
-  dataMaterial.forEach((i,n) => {
-    if (i.nama) msg += `${n+1}. ${i.nama}\n    ${i.qty} pcs × ${formatRp(i.harga)} = *${formatRp(i.qty*i.harga)}*\n`;
-  });
+  let msg = "📦 *ORDER LIST*\n━━━━━━━━━━━━━━━━\n";
+  msg += `👤 *${nama}*\n📋 No. Order: ${noOrd}\n📋 No. UPB: ${noUpb}\n📅 ${tgl}\n\n`;
+  msg += "🔧 *Material Utama*\n";
+  dataMaterial.forEach((i,n) => { if(i.nama) msg += `${n+1}. ${i.nama}\n    ${i.qty} pcs × ${formatRp(i.harga)} = *${formatRp(i.qty*i.harga)}*\n`; });
   msg += `_Subtotal: ${formatRp(totalM)}_\n\n`;
-
-  msg += `🔩 *Aksesoris*\n`;
-  dataAksesoris.forEach((i,n) => {
-    if (i.nama) msg += `${n+1}. ${i.nama}\n    ${i.qty} pcs × ${formatRp(i.harga)} = *${formatRp(i.qty*i.harga)}*\n`;
-  });
+  msg += "🔩 *Aksesoris*\n";
+  dataAksesoris.forEach((i,n) => { if(i.nama) msg += `${n+1}. ${i.nama}\n    ${i.qty} pcs × ${formatRp(i.harga)} = *${formatRp(i.qty*i.harga)}*\n`; });
   msg += `_Subtotal: ${formatRp(totalA)}_\n\n`;
-
   msg += `👷 *${jasaD}*\n    ${jasaQ} pcs × ${formatRp(jasaH)} = *${formatRp(totalJ)}*\n\n`;
-  msg += `━━━━━━━━━━━━━━━━\n💰 *GRAND TOTAL: ${formatRp(grand)}*`;
+  msg += `━━━━━━━━━━━━━━━━\n💰 *GRAND TOTAL: ${formatRp(totalM+totalA+totalJ)}*`;
 
   const noWA = prompt("Nomor WA tujuan (contoh: 628123456789):", "628");
   if (!noWA) return;
@@ -426,104 +456,50 @@ const SCRIPT_CODE = `function doPost(e) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sh = ss.getSheetByName("Orders") || ss.insertSheet("Orders");
   const d  = JSON.parse(e.postData.contents);
-
-  if (sh.getLastRow() === 0) {
+  if (sh.getLastRow() === 0)
     sh.appendRow(["Waktu","Nama","No Order","No UPB","Tanggal","Barang","Qty","Harga","Subtotal","Kategori"]);
-  }
-
   const rows = [];
-  d.material.forEach(i  => rows.push([new Date(), d.nama, d.noOrder, d.noUpb, d.tanggal, i.nama, i.qty, i.harga, i.qty*i.harga, "Material"]));
-  d.aksesoris.forEach(i => rows.push([new Date(), d.nama, d.noOrder, d.noUpb, d.tanggal, i.nama, i.qty, i.harga, i.qty*i.harga, "Aksesoris"]));
-  rows.push([new Date(), d.nama, d.noOrder, d.noUpb, d.tanggal, d.jasaDesc, d.jasaQty, d.jasaHarga, d.jasaQty*d.jasaHarga, "Jasa"]);
-
+  d.material.forEach(i  => rows.push([new Date(),d.nama,d.noOrder,d.noUpb,d.tanggal,i.nama,i.qty,i.harga,i.qty*i.harga,"Material"]));
+  d.aksesoris.forEach(i => rows.push([new Date(),d.nama,d.noOrder,d.noUpb,d.tanggal,i.nama,i.qty,i.harga,i.qty*i.harga,"Aksesoris"]));
+  rows.push([new Date(),d.nama,d.noOrder,d.noUpb,d.tanggal,d.jasaDesc,d.jasaQty,d.jasaHarga,d.jasaQty*d.jasaHarga,"Jasa"]);
   rows.forEach(r => sh.appendRow(r));
-  return ContentService.createTextOutput(JSON.stringify({status:"ok"}))
-    .setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify({status:"ok"})).setMimeType(ContentService.MimeType.JSON);
 }`;
-
 document.getElementById("appsScriptCode").textContent = SCRIPT_CODE;
 
 function copyScript() {
   navigator.clipboard.writeText(SCRIPT_CODE)
     .then(() => showToast("✓ Script disalin!", "#34a853"))
-    .catch(() => showToast("Gagal salin, copy manual ya"));
+    .catch(() => showToast("Copy manual ya"));
 }
 
 async function kirimSheets() {
   const url = document.getElementById("sheetsUrl").value.trim();
-  if (!url) { showToast("⚠️ Isi URL Apps Script dulu!", "#f59e0b"); return; }
+  if (!url) { showToast("⚠️ Isi URL dulu!", "#f59e0b"); return; }
   localStorage.setItem("sheetsUrl", url);
-
-  const payload = {
-    nama:      document.getElementById("namaPelanggan").value,
-    noOrder:   document.getElementById("noOrder").value,
-    noUpb:     document.getElementById("noUpb").value,
-    tanggal:   document.getElementById("tanggal").value,
-    material:  dataMaterial,
-    aksesoris: dataAksesoris,
-    jasaDesc:  document.getElementById("jasaDesc").value,
-    jasaQty:   parseInt(document.getElementById("jasaQty").value)||0,
-    jasaHarga: parseAngka(document.getElementById("jasaHarga").value),
-  };
-
-  showToast("⏳ Mengirim ke Sheets...", "#6b7280");
+  const payload = { ...ambilState(), jasaDesc: document.getElementById("jasaDesc").value,
+    jasaQty: parseInt(document.getElementById("jasaQty").value)||0,
+    jasaHarga: parseAngka(document.getElementById("jasaHarga").value) };
+  showToast("⏳ Mengirim...", "#6b7280");
   try {
     await fetch(url, { method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
     bootstrap.Modal.getInstance(document.getElementById("modalSheets"))?.hide();
-    showToast("✓ Berhasil dikirim ke Google Sheets!", "#34a853");
-  } catch(err) {
-    showToast("❌ Gagal: " + err.message, "#ef4444");
-  }
+    showToast("✓ Berhasil dikirim ke Sheets!", "#34a853");
+  } catch(e) { showToast("❌ Gagal: "+e.message, "#ef4444"); }
 }
 
-// ── Firebase Config (hardcoded) ───────────────────────
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBjTKyBkKdZ9d1p2XS2PrLMpHsvvqK0jYk",
-  authDomain: "form-pesanan-uniq.firebaseapp.com",
-  databaseURL: "https://form-pesanan-uniq-default-rtdb.firebaseio.com",
-  projectId: "form-pesanan-uniq",
-  storageBucket: "form-pesanan-uniq.firebasestorage.app",
-  messagingSenderId: "507202084583",
-  appId: "1:507202084583:web:b097401aefce60bd03cc42",
-  measurementId: "G-2V4LXTE49H"
-};
-
-// ── Init ──────────────────────────────────────────────
-// Muat localStorage dulu (instant)
-try {
-  const raw = localStorage.getItem("formPemesan");
-  if (raw) muatDariObject(JSON.parse(raw));
-} catch(e) {}
-
-if (!document.getElementById("tanggal").value)
-  document.getElementById("tanggal").valueAsDate = new Date();
+// ── Init UI ───────────────────────────────────────────
+document.getElementById("tanggal").valueAsDate = new Date();
+document.getElementById("jasaDesc").value  = DEF_JASA.desc;
+document.getElementById("jasaQty").value   = DEF_JASA.qty;
+document.getElementById("jasaHarga").value = DEF_JASA.harga.toLocaleString("id-ID");
+const savedUrl = localStorage.getItem("sheetsUrl");
+if (savedUrl) document.getElementById("sheetsUrl").value = savedUrl;
 document.getElementById("noOrder").addEventListener("input", hitungSemua);
 document.getElementById("noUpb").addEventListener("input", hitungSemua);
 renderTabel("bodyMaterial",  dataMaterial);
 renderTabel("bodyAksesoris", dataAksesoris);
 hitungSemua();
-
-// Auto-connect Firebase tanpa perlu setup manual
-setSyncStatus("syncing", "Menyambungkan...");
-try {
-  let app;
-  try { app = firebase.app(); } catch(e) { app = firebase.initializeApp(FIREBASE_CONFIG); }
-  fbDatabase = firebase.database();
-  fbDatabase.ref("formPemesan").on("value", (snap) => {
-    const data = snap.val();
-    if (data) {
-      muatDariObject(data);
-      setSyncStatus("synced", "Tersinkron real-time ☁️");
-    } else {
-      simpanKeFirebase();
-      setSyncStatus("synced", "Tersinkron real-time ☁️");
-    }
-  }, (err) => {
-    setSyncStatus("offline", "Gagal: " + err.message);
-  });
-} catch(e) {
-  setSyncStatus("offline", "Firebase error: " + e.message);
-}
 </script>
 </body>
 </html>
