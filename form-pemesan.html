@@ -35,6 +35,43 @@
     #toast.show { display:block; animation:fadeUp .3s ease; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
     .script-box { background:#f8faff; border-radius:8px; padding:10px; font-size:11px; font-family:monospace; border:1px solid #e5e7eb; white-space:pre-wrap; max-height:160px; overflow-y:auto; }
+    /* ── Responsive Mobile ───────────────────────────── */
+    @media (max-width: 767px) {
+      .container { padding-left:12px !important; padding-right:12px !important; }
+      .header-card { padding:18px 16px; border-radius:12px; }
+      .header-card > .d-flex { flex-direction:column; align-items:flex-start !important; gap:12px !important; }
+      .header-card div:nth-child(2) { font-size:20px !important; }
+      .header-card .no-print { width:100%; display:grid !important; grid-template-columns:1fr 1fr; gap:7px; }
+      .header-card .no-print .btn { width:100%; justify-content:center; display:flex; align-items:center; padding:7px 4px; font-size:12px; }
+      .section-card { padding:14px 12px; }
+      /* Tabel scroll horizontal di mobile */
+      .table-responsive { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+      .table thead th { font-size:10px; padding:6px 4px; white-space:nowrap; }
+      .table td { padding:5px 4px; font-size:12px; }
+      .table .form-control-sm { font-size:12px; padding:4px 5px; }
+      .table td:nth-child(2) { min-width:110px; }
+      .table td:nth-child(3) { min-width:55px; }
+      .table td:nth-child(4) { min-width:82px; }
+      .table td:nth-child(5) { min-width:85px; }
+      .total-row td { font-size:12px; }
+      /* Grand total stack vertical */
+      .grand-total-card { flex-direction:column !important; align-items:flex-start !important; gap:4px; padding:16px 18px; }
+      .grand-total-card #grandTotal { font-size:22px !important; }
+      /* Jasa section stack */
+      .jasa-row { flex-direction:column; }
+      .jasa-row > div { width:100% !important; }
+      #jasaSubtotal { text-align:left !important; font-size:13px !important; padding-top:2px; }
+      /* Toast full width */
+      #toast { bottom:14px; right:12px; left:12px; text-align:center; font-size:12px; }
+    }
+
+    @media (min-width:768px) and (max-width:991px) {
+      .header-card { padding:22px 24px; }
+      .section-card { padding:20px; }
+    }
+
+    .table td input.form-control { width:100%; box-sizing:border-box; }
+
     @media print { .no-print{display:none !important;} body{background:white;} }
   </style>
 </head>
@@ -44,8 +81,8 @@
   <!-- Header -->
   <div class="header-card d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-      <div style="font-size:11px;letter-spacing:3px;opacity:.7">FORM PEMESAN</div>
-      <div style="font-size:24px;font-weight:800">📦 Order List</div>
+      <div style="font-size:11px;letter-spacing:3px;opacity:.7">FORM ORDER</div>
+      <div style="font-size:24px;font-weight:800">📦 UNIQ CELLt</div>
       <div style="font-size:10px;margin-top:5px" class="no-print" id="syncStatus">
         <span class="sync-dot syncing"></span>Menyambungkan Firebase...
       </div>
@@ -143,7 +180,7 @@
   <!-- Jasa -->
   <div class="section-card">
     <div class="section-label">👷 JASA PEMASANGAN</div>
-    <div class="row g-2 align-items-center">
+    <div class="row g-2 align-items-center jasa-row">
       <div class="col-md-5">
         <input type="text" class="form-control form-control-sm" id="jasaDesc" oninput="hitungSemua();autoSave()"/>
       </div>
