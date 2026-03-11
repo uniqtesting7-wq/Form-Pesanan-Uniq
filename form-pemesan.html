@@ -1,48 +1,46 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Form Pemesan</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
-  <!-- Firebase compat SDK (bisa dipanggil dari script biasa) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
-    body { background:#f0f4f8; font-family:'Segoe UI',sans-serif; }
-    .header-card { background:linear-gradient(135deg,#1e3a8a,#2563eb); border-radius:14px; color:white; padding:28px 32px; margin-bottom:20px; }
-    .section-card { background:white; border-radius:12px; padding:24px; box-shadow:0 1px 4px rgba(0,0,0,0.07); margin-bottom:20px; }
-    .section-label { font-size:11px; font-weight:700; color:#6b7280; letter-spacing:1.5px; margin-bottom:14px; }
-    .table thead th { background:#f8faff; font-size:11px; font-weight:700; color:#6b7280; letter-spacing:0.5px; border-bottom:2px solid #e5e7eb; }
-    .table td { vertical-align:middle; font-size:13px; }
-    .table tbody tr:hover { background:#f8faff; }
-    .subtotal { font-weight:700; color:#1e3a8a; }
-    .subtotal.zero { color:#d1d5db; }
-    .grand-total-card { background:linear-gradient(135deg,#1e3a8a,#2563eb); border-radius:12px; color:white; padding:20px 28px; }
-    input.form-control:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
-    .btn-add-row { background:#eff6ff; color:#2563eb; border:none; width:30px; height:30px; border-radius:6px; font-size:18px; line-height:1; font-weight:700; cursor:pointer; }
-    .btn-add-row:hover { background:#dbeafe; color:#1e3a8a; }
-    .btn-remove { background:#fff1f2; color:#f43f5e; border:none; width:30px; height:30px; border-radius:6px; font-size:16px; line-height:1; cursor:pointer; }
-    .btn-remove:hover { background:#ffe4e6; }
-    .action-btns { display:flex; gap:4px; justify-content:center; }
-    .total-row td { font-weight:700; font-size:14px; color:#1e3a8a; border-top:2px solid #e5e7eb !important; }
-    .sync-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:5px; }
-    .sync-dot.synced  { background:#4ade80; }
-    .sync-dot.syncing { background:#fbbf24; animation:pulse 1s infinite; }
-    .sync-dot.offline { background:#f87171; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-    #toast { position:fixed; bottom:24px; right:24px; z-index:9999; background:#1e3a8a; color:white;
-      padding:10px 18px; border-radius:10px; font-size:13px; font-weight:600;
-      display:none; box-shadow:0 4px 16px rgba(0,0,0,0.18); }
-    #toast.show { display:block; animation:fadeInUp .3s ease; }
-    @keyframes fadeInUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-    .script-box { background:#f8faff; border-radius:8px; padding:10px; font-size:11px; font-family:monospace;
-      border:1px solid #e5e7eb; white-space:pre-wrap; max-height:160px; overflow-y:auto; }
+    body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+    .header-card {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      border-radius: 14px; color: white; padding: 28px 32px; margin-bottom: 20px;
+    }
+    .section-card {
+      background: white; border-radius: 12px; padding: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 20px;
+    }
+    .section-label { font-size: 11px; font-weight: 700; color: #6b7280; letter-spacing: 1.5px; margin-bottom: 14px; }
+    .table thead th { background: #f8faff; font-size: 11px; font-weight: 700; color: #6b7280; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb; }
+    .table td { vertical-align: middle; font-size: 13px; }
+    .table tbody tr:hover { background: #f8faff; }
+    .subtotal { font-weight: 700; color: #1e3a8a; }
+    .subtotal.zero { color: #d1d5db; }
+    .grand-total-card { background: linear-gradient(135deg, #1e3a8a, #2563eb); border-radius: 12px; color: white; padding: 20px 28px; }
+    input.form-control:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .btn-add-row { background: #eff6ff; color: #2563eb; border: none; width: 30px; height: 30px; border-radius: 6px; font-size: 18px; line-height: 1; font-weight: 700; cursor: pointer; }
+    .btn-add-row:hover { background: #dbeafe; color: #1e3a8a; }
+    .btn-remove { background: #fff1f2; color: #f43f5e; border: none; width: 30px; height: 30px; border-radius: 6px; font-size: 16px; line-height: 1; cursor: pointer; }
+    .btn-remove:hover { background: #ffe4e6; }
+    .action-btns { display: flex; gap: 4px; justify-content: center; }
+    .total-row td { font-weight: 700; font-size: 14px; color: #1e3a8a; border-top: 2px solid #e5e7eb !important; }
+    #toast { position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: #1e3a8a; color: white;
+      padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.18); }
+    #toast.show { display: block; animation: fadeInUp .3s ease; }
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .script-box { background:#f8faff; border-radius:8px; padding:10px; font-size:11px;
+      font-family:monospace; border:1px solid #e5e7eb; white-space:pre-wrap; max-height:160px; overflow-y:auto; }
     @media print {
-      .no-print { display:none !important; }
-      body { background:white; }
-      .section-card,.header-card,.grand-total-card { box-shadow:none; }
+      .no-print { display: none !important; }
+      body { background: white; }
+      .section-card, .header-card, .grand-total-card { box-shadow: none; }
     }
   </style>
 </head>
@@ -52,19 +50,13 @@
   <!-- Header -->
   <div class="header-card d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-      <div style="font-size:11px;letter-spacing:3px;opacity:.7">FORM PESANAN</div>
+      <div style="font-size:11px;letter-spacing:3px;opacity:.7">FORM PEMESAN</div>
       <div style="font-size:24px;font-weight:800">📦 Order List</div>
-      <div style="font-size:10px;margin-top:5px" class="no-print" id="syncStatus">
-        <span class="sync-dot offline"></span>Firebase belum setup
-      </div>
+      <div style="font-size:10px;opacity:.6;margin-top:4px" class="no-print">● Auto-save aktif</div>
     </div>
     <div class="no-print d-flex flex-wrap gap-2">
       <button class="btn btn-light btn-sm fw-semibold" onclick="simpanLokal()">
         <i class="bi bi-floppy me-1"></i>Simpan
-      </button>
-      <button class="btn btn-sm fw-semibold" style="background:#f59e0b;color:white;border:none"
-        data-bs-toggle="modal" data-bs-target="#modalFirebase">
-        <i class="bi bi-cloud me-1"></i>Firebase
       </button>
       <button class="btn btn-sm fw-semibold" style="background:#25D366;color:white;border:none" onclick="kirimWA()">
         <i class="bi bi-whatsapp me-1"></i>WA
@@ -111,7 +103,8 @@
     <div class="table-responsive">
       <table class="table table-borderless mb-0">
         <thead><tr>
-          <th style="width:36px">#</th><th>NAMA BARANG</th>
+          <th style="width:36px">#</th>
+          <th>NAMA BARANG</th>
           <th style="width:80px;text-align:center">QTY</th>
           <th style="width:130px;text-align:right">HARGA</th>
           <th style="width:130px;text-align:right">SUBTOTAL</th>
@@ -136,7 +129,8 @@
     <div class="table-responsive">
       <table class="table table-borderless mb-0">
         <thead><tr>
-          <th style="width:36px">#</th><th>NAMA BARANG</th>
+          <th style="width:36px">#</th>
+          <th>NAMA BARANG</th>
           <th style="width:80px;text-align:center">QTY</th>
           <th style="width:130px;text-align:right">HARGA</th>
           <th style="width:130px;text-align:right">SUBTOTAL</th>
@@ -177,55 +171,11 @@
     </div>
     <div style="font-size:28px;font-weight:800" id="grandTotal">Rp 0</div>
   </div>
-  <div class="text-center mt-3 no-print" style="color:#9ca3af;font-size:11px">Data tersimpan otomatis</div>
+  <div class="text-center mt-3 no-print" style="color:#9ca3af;font-size:11px">Data tersimpan otomatis di browser ini</div>
 </div>
 
 <!-- Toast -->
 <div id="toast"></div>
-
-<!-- Modal Firebase -->
-<div class="modal fade" id="modalFirebase" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content" style="border-radius:14px;border:none">
-      <div class="modal-header border-0 pb-0">
-        <h6 class="modal-title fw-bold"><i class="bi bi-cloud-fill me-2" style="color:#f59e0b"></i>Setup Firebase Sync</h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="alert alert-warning py-2 px-3 mb-3" style="font-size:12px;border-radius:8px">
-          <strong>Setelah setup, semua perangkat sinkron otomatis real-time ☁️</strong>
-        </div>
-        <div style="font-size:12px;line-height:2;color:#374151" class="mb-3">
-          1. Buka <a href="https://console.firebase.google.com" target="_blank">Firebase Console</a> → project kamu<br>
-          2. Klik ikon <strong>&lt;/&gt;</strong> → Register app → copy <code>firebaseConfig</code><br>
-          3. <strong>Build → Realtime Database → Create database</strong> → <em>test mode</em><br>
-          4. Paste config di bawah → klik Sambungkan
-        </div>
-        <div class="mb-1">
-          <label class="form-label" style="font-size:11px;font-weight:700;color:#6b7280">Firebase Config (paste isi objek <code>{...}</code>):</label>
-          <textarea class="form-control form-control-sm" id="firebaseConfigInput" rows="8"
-            style="font-family:monospace;font-size:11px"
-            placeholder='{
-  "apiKey": "AIzaSy...",
-  "authDomain": "project.firebaseapp.com",
-  "databaseURL": "https://project-default-rtdb.firebaseio.com",
-  "projectId": "project-id",
-  "storageBucket": "project.appspot.com",
-  "messagingSenderId": "123456",
-  "appId": "1:123:web:abc"
-}'></textarea>
-          <div style="font-size:10px;color:#9ca3af;margin-top:4px">Config disimpan di browser, tidak perlu isi ulang</div>
-        </div>
-      </div>
-      <div class="modal-footer border-0 pt-0">
-        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
-        <button class="btn btn-sm fw-semibold" style="background:#f59e0b;color:white;border:none" onclick="sambungkanFirebase()">
-          <i class="bi bi-cloud-check me-1"></i>Sambungkan
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- Modal Google Sheets -->
 <div class="modal fade" id="modalSheets" tabindex="-1">
@@ -237,9 +187,13 @@
       </div>
       <div class="modal-body">
         <div class="alert alert-info py-2 px-3 mb-3" style="font-size:12px;border-radius:8px">
-          1. Buka <a href="https://sheets.google.com" target="_blank">Google Sheets</a> → spreadsheet baru<br>
-          2. <strong>Extensions → Apps Script</strong> → paste script → Deploy → Web app<br>
-          3. Execute as: <em>Me</em> | Access: <em>Anyone</em> → copy URL
+          <strong>Setup sekali saja:</strong><br>
+          1. Buka <a href="https://sheets.google.com" target="_blank">Google Sheets</a> → buat spreadsheet baru<br>
+          2. Klik <strong>Extensions → Apps Script</strong><br>
+          3. Hapus kode default, paste script di bawah<br>
+          4. Klik <strong>Deploy → New deployment → Web app</strong><br>
+          5. Execute as: <em>Me</em> &nbsp;|&nbsp; Who has access: <em>Anyone</em><br>
+          6. Klik Deploy → copy URL → paste di kolom bawah
         </div>
         <div class="mb-3">
           <label class="form-label" style="font-size:11px;font-weight:700;color:#6b7280">Script Apps Script:</label>
@@ -252,6 +206,7 @@
           <label class="form-label" style="font-size:11px;font-weight:700;color:#6b7280">Web App URL:</label>
           <input type="text" class="form-control form-control-sm" id="sheetsUrl"
             placeholder="https://script.google.com/macros/s/....../exec"/>
+          <div style="font-size:10px;color:#9ca3af;margin-top:4px">URL disimpan otomatis, tidak perlu isi ulang</div>
         </div>
       </div>
       <div class="modal-footer border-0 pt-0">
@@ -294,11 +249,9 @@ const DEFAULT_AKSESORIS = [
 
 let dataMaterial  = JSON.parse(JSON.stringify(DEFAULT_MATERIAL));
 let dataAksesoris = JSON.parse(JSON.stringify(DEFAULT_AKSESORIS));
-let fbDatabase    = null;
-let fbSaveTimer   = null;
 
 // ── Util ───────────────────────────────────────────────
-const formatRp   = n => "Rp " + Number(n||0).toLocaleString("id-ID");
+const formatRp  = n => "Rp " + Number(n||0).toLocaleString("id-ID");
 const parseAngka = s => parseInt(String(s).replace(/[^0-9]/g,""))||0;
 
 function showToast(msg, color="#1e3a8a") {
@@ -308,152 +261,61 @@ function showToast(msg, color="#1e3a8a") {
   setTimeout(() => t.classList.remove("show"), 2800);
 }
 
-function setSyncStatus(state, msg) {
-  const el = document.getElementById("syncStatus");
-  if (el) el.innerHTML = `<span class="sync-dot ${state}"></span>${msg}`;
-}
-
-// ── Firebase ──────────────────────────────────────────
-function sambungkanFirebase() {
-  const raw = document.getElementById("firebaseConfigInput").value.trim();
-  if (!raw) { showToast("⚠️ Isi config dulu!", "#f59e0b"); return; }
-
-  let cfg;
-  try {
-    // Bersihkan — hapus nama variabel jika ada, ambil hanya { ... }
-    const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error("Tidak menemukan objek {}");
-    // Ubah key tanpa quotes jadi quoted (handle format JS object)
-    const jsonStr = match[0].replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)/g, '$1"$2"$3');
-    cfg = JSON.parse(jsonStr);
-  } catch(e) {
-    showToast("❌ Format config salah: " + e.message, "#ef4444"); return;
-  }
-
-  if (!cfg.databaseURL) {
-    showToast("❌ Config tidak punya databaseURL!", "#ef4444"); return;
-  }
-
-  try {
-    // Cek apakah Firebase sudah diinit sebelumnya
-    let app;
-    try { app = firebase.app(); } catch(e) { app = firebase.initializeApp(cfg); }
-
-    fbDatabase = firebase.database();
-    localStorage.setItem("firebaseConfig", JSON.stringify(cfg));
-
-    bootstrap.Modal.getInstance(document.getElementById("modalFirebase"))?.hide();
-    setSyncStatus("syncing", "Menghubungkan...");
-
-    // Dengarkan perubahan real-time
-    fbDatabase.ref("formPemesan").on("value", (snap) => {
-      const data = snap.val();
-      if (data) {
-        muatDariObject(data);
-        setSyncStatus("synced", "Tersinkron real-time ☁️");
-      } else {
-        // Database kosong, upload data saat ini
-        simpanKeFirebase();
-        setSyncStatus("synced", "Tersinkron real-time ☁️");
-      }
-    }, (err) => {
-      setSyncStatus("offline", "Error: " + err.message);
-      showToast("❌ " + err.message, "#ef4444");
-    });
-
-    showToast("✓ Firebase tersambung!", "#f59e0b");
-  } catch(e) {
-    showToast("❌ " + e.message, "#ef4444");
-    setSyncStatus("offline", "Gagal: " + e.message);
-  }
-}
-
-function simpanKeFirebase() {
-  if (!fbDatabase) return;
-  setSyncStatus("syncing", "Menyimpan...");
-  fbDatabase.ref("formPemesan").set(ambilState())
-    .then(() => setSyncStatus("synced", "Tersinkron real-time ☁️"))
-    .catch(e => setSyncStatus("offline", "Gagal sync"));
-}
-
-// ── Save ──────────────────────────────────────────────
-function ambilState() {
-  return {
-    pelanggan: {
-      nama:    document.getElementById("namaPelanggan").value,
-      noOrder: document.getElementById("noOrder").value,
-      noUpb:   document.getElementById("noUpb").value,
-      tanggal: document.getElementById("tanggal").value,
-    },
-    material:  dataMaterial,
-    aksesoris: dataAksesoris,
-    jasa: {
-      desc:  document.getElementById("jasaDesc").value,
-      qty:   document.getElementById("jasaQty").value,
-      harga: document.getElementById("jasaHarga").value,
-    }
-  };
-}
-
+// ── localStorage ──────────────────────────────────────
 function autoSave() {
   hitungSemua();
-  // localStorage selalu
-  try { localStorage.setItem("formPemesan", JSON.stringify(ambilState())); } catch(e) {}
-  // Firebase dengan debounce 1 detik
-  if (fbDatabase) {
-    clearTimeout(fbSaveTimer);
-    fbSaveTimer = setTimeout(simpanKeFirebase, 1000);
-  }
+  try {
+    localStorage.setItem("formPemesan", JSON.stringify({
+      pelanggan: {
+        nama:    document.getElementById("namaPelanggan").value,
+        noOrder: document.getElementById("noOrder").value,
+        noUpb:   document.getElementById("noUpb").value,
+        tanggal: document.getElementById("tanggal").value,
+      },
+      material:  dataMaterial,
+      aksesoris: dataAksesoris,
+      jasa: {
+        desc:  document.getElementById("jasaDesc").value,
+        qty:   document.getElementById("jasaQty").value,
+        harga: document.getElementById("jasaHarga").value,
+      }
+    }));
+  } catch(e) {}
 }
 
 function simpanLokal() {
   autoSave();
-  showToast("✓ Tersimpan!", "#22c55e");
-}
-
-function muatDariObject(s) {
-  if (!s) return;
-  if (s.pelanggan) {
-    document.getElementById("namaPelanggan").value = s.pelanggan.nama    || "";
-    document.getElementById("noOrder").value       = s.pelanggan.noOrder || "";
-    document.getElementById("noUpb").value         = s.pelanggan.noUpb   || "";
-    document.getElementById("tanggal").value       = s.pelanggan.tanggal || "";
-  }
-  if (s.material  && s.material.length)  { dataMaterial  = s.material;  renderTabel("bodyMaterial",  dataMaterial); }
-  if (s.aksesoris && s.aksesoris.length) { dataAksesoris = s.aksesoris; renderTabel("bodyAksesoris", dataAksesoris); }
-  if (s.jasa) {
-    document.getElementById("jasaDesc").value  = s.jasa.desc  || "";
-    document.getElementById("jasaQty").value   = s.jasa.qty   || 0;
-    document.getElementById("jasaHarga").value = s.jasa.harga || "";
-  }
-  hitungSemua();
+  showToast("✓ Tersimpan di browser!", "#22c55e");
 }
 
 function muatData() {
-  // 1. localStorage dulu (instant)
   try {
     const raw = localStorage.getItem("formPemesan");
-    if (raw) muatDariObject(JSON.parse(raw));
-  } catch(e) {}
-
-  // 2. Reconnect Firebase jika config sudah ada
-  try {
-    const fbCfg = localStorage.getItem("firebaseConfig");
-    if (fbCfg) {
-      document.getElementById("firebaseConfigInput").value = fbCfg;
-      setSyncStatus("syncing", "Menyambungkan Firebase...");
-      // Trigger sambungkan otomatis
-      setTimeout(() => sambungkanFirebase(), 500);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (s.pelanggan) {
+      document.getElementById("namaPelanggan").value = s.pelanggan.nama    || "";
+      document.getElementById("noOrder").value       = s.pelanggan.noOrder || "";
+      document.getElementById("noUpb").value         = s.pelanggan.noUpb   || "";
+      document.getElementById("tanggal").value       = s.pelanggan.tanggal || "";
     }
-    const sheetsUrl = localStorage.getItem("sheetsUrl");
-    if (sheetsUrl) document.getElementById("sheetsUrl").value = sheetsUrl;
+    if (s.material  && s.material.length)  dataMaterial  = s.material;
+    if (s.aksesoris && s.aksesoris.length) dataAksesoris = s.aksesoris;
+    if (s.jasa) {
+      document.getElementById("jasaDesc").value  = s.jasa.desc  || "";
+      document.getElementById("jasaQty").value   = s.jasa.qty   || 0;
+      document.getElementById("jasaHarga").value = s.jasa.harga || "";
+    }
+    // Load sheets URL
+    const url = localStorage.getItem("sheetsUrl");
+    if (url) document.getElementById("sheetsUrl").value = url;
   } catch(e) {}
 }
 
 // ── Render Tabel ───────────────────────────────────────
 function renderTabel(bodyId, data) {
   const tbody = document.getElementById(bodyId);
-  const tipe  = bodyId==="bodyMaterial" ? "material" : "aksesoris";
+  const tipe  = bodyId === "bodyMaterial" ? "material" : "aksesoris";
   tbody.innerHTML = "";
   data.forEach((item, i) => {
     const isLast = i === data.length - 1;
@@ -524,27 +386,35 @@ function hitungSemua() {
 
 // ── WhatsApp ──────────────────────────────────────────
 function kirimWA() {
-  const nama  = document.getElementById("namaPelanggan").value;
-  const noOrd = document.getElementById("noOrder").value;
-  const noUpb = document.getElementById("noUpb").value;
-  const tgl   = document.getElementById("tanggal").value;
-  const jasaQ = parseInt(document.getElementById("jasaQty").value)||0;
-  const jasaH = parseAngka(document.getElementById("jasaHarga").value);
-  const jasaD = document.getElementById("jasaDesc").value;
-  const totalM = dataMaterial.reduce((s,i)  => s+i.qty*i.harga, 0);
-  const totalA = dataAksesoris.reduce((s,i) => s+i.qty*i.harga, 0);
-  const totalJ = jasaQ * jasaH;
+  const nama    = document.getElementById("namaPelanggan").value;
+  const noOrder = document.getElementById("noOrder").value;
+  const noUpb   = document.getElementById("noUpb").value;
+  const tgl     = document.getElementById("tanggal").value;
+  const jasaQ   = parseInt(document.getElementById("jasaQty").value)||0;
+  const jasaH   = parseAngka(document.getElementById("jasaHarga").value);
+  const jasaD   = document.getElementById("jasaDesc").value;
+  const totalM  = dataMaterial.reduce((s,i)  => s+i.qty*i.harga, 0);
+  const totalA  = dataAksesoris.reduce((s,i) => s+i.qty*i.harga, 0);
+  const totalJ  = jasaQ * jasaH;
+  const grand   = totalM + totalA + totalJ;
 
   let msg = `📦 *ORDER LIST*\n━━━━━━━━━━━━━━━━\n`;
-  msg += `👤 *${nama}*\n📋 No. Order: ${noOrd}\n📋 No. UPB: ${noUpb}\n📅 ${tgl}\n\n`;
+  msg += `👤 *${nama}*\n📋 No. Order: ${noOrder}\n📋 No. UPB: ${noUpb}\n📅 ${tgl}\n\n`;
+
   msg += `🔧 *Material Utama*\n`;
-  dataMaterial.forEach((i,n) => { if(i.nama) msg += `${n+1}. ${i.nama}\n    ${i.qty} pcs × ${formatRp(i.harga)} = *${formatRp(i.qty*i.harga)}*\n`; });
+  dataMaterial.forEach((i,n) => {
+    if (i.nama) msg += `${n+1}. ${i.nama}\n    ${i.qty} pcs × ${formatRp(i.harga)} = *${formatRp(i.qty*i.harga)}*\n`;
+  });
   msg += `_Subtotal: ${formatRp(totalM)}_\n\n`;
+
   msg += `🔩 *Aksesoris*\n`;
-  dataAksesoris.forEach((i,n) => { if(i.nama) msg += `${n+1}. ${i.nama}\n    ${i.qty} pcs × ${formatRp(i.harga)} = *${formatRp(i.qty*i.harga)}*\n`; });
+  dataAksesoris.forEach((i,n) => {
+    if (i.nama) msg += `${n+1}. ${i.nama}\n    ${i.qty} pcs × ${formatRp(i.harga)} = *${formatRp(i.qty*i.harga)}*\n`;
+  });
   msg += `_Subtotal: ${formatRp(totalA)}_\n\n`;
+
   msg += `👷 *${jasaD}*\n    ${jasaQ} pcs × ${formatRp(jasaH)} = *${formatRp(totalJ)}*\n\n`;
-  msg += `━━━━━━━━━━━━━━━━\n💰 *GRAND TOTAL: ${formatRp(totalM+totalA+totalJ)}*`;
+  msg += `━━━━━━━━━━━━━━━━\n💰 *GRAND TOTAL: ${formatRp(grand)}*`;
 
   const noWA = prompt("Nomor WA tujuan (contoh: 628123456789):", "628");
   if (!noWA) return;
@@ -556,48 +426,75 @@ const SCRIPT_CODE = `function doPost(e) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sh = ss.getSheetByName("Orders") || ss.insertSheet("Orders");
   const d  = JSON.parse(e.postData.contents);
+
   if (sh.getLastRow() === 0) {
     sh.appendRow(["Waktu","Nama","No Order","No UPB","Tanggal","Barang","Qty","Harga","Subtotal","Kategori"]);
   }
+
   const rows = [];
-  d.material.forEach(i  => rows.push([new Date(),d.nama,d.noOrder,d.noUpb,d.tanggal,i.nama,i.qty,i.harga,i.qty*i.harga,"Material"]));
-  d.aksesoris.forEach(i => rows.push([new Date(),d.nama,d.noOrder,d.noUpb,d.tanggal,i.nama,i.qty,i.harga,i.qty*i.harga,"Aksesoris"]));
-  rows.push([new Date(),d.nama,d.noOrder,d.noUpb,d.tanggal,d.jasaDesc,d.jasaQty,d.jasaHarga,d.jasaQty*d.jasaHarga,"Jasa"]);
+  d.material.forEach(i  => rows.push([new Date(), d.nama, d.noOrder, d.noUpb, d.tanggal, i.nama, i.qty, i.harga, i.qty*i.harga, "Material"]));
+  d.aksesoris.forEach(i => rows.push([new Date(), d.nama, d.noOrder, d.noUpb, d.tanggal, i.nama, i.qty, i.harga, i.qty*i.harga, "Aksesoris"]));
+  rows.push([new Date(), d.nama, d.noOrder, d.noUpb, d.tanggal, d.jasaDesc, d.jasaQty, d.jasaHarga, d.jasaQty*d.jasaHarga, "Jasa"]);
+
   rows.forEach(r => sh.appendRow(r));
-  return ContentService.createTextOutput(JSON.stringify({status:"ok"})).setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify({status:"ok"}))
+    .setMimeType(ContentService.MimeType.JSON);
 }`;
+
 document.getElementById("appsScriptCode").textContent = SCRIPT_CODE;
 
 function copyScript() {
   navigator.clipboard.writeText(SCRIPT_CODE)
     .then(() => showToast("✓ Script disalin!", "#34a853"))
-    .catch(() => showToast("Copy manual ya"));
+    .catch(() => showToast("Gagal salin, copy manual ya"));
 }
 
 async function kirimSheets() {
   const url = document.getElementById("sheetsUrl").value.trim();
-  if (!url) { showToast("⚠️ Isi URL dulu!", "#f59e0b"); return; }
+  if (!url) { showToast("⚠️ Isi URL Apps Script dulu!", "#f59e0b"); return; }
   localStorage.setItem("sheetsUrl", url);
+
   const payload = {
-    nama: document.getElementById("namaPelanggan").value,
-    noOrder: document.getElementById("noOrder").value,
-    noUpb: document.getElementById("noUpb").value,
-    tanggal: document.getElementById("tanggal").value,
-    material: dataMaterial, aksesoris: dataAksesoris,
-    jasaDesc: document.getElementById("jasaDesc").value,
-    jasaQty: parseInt(document.getElementById("jasaQty").value)||0,
+    nama:      document.getElementById("namaPelanggan").value,
+    noOrder:   document.getElementById("noOrder").value,
+    noUpb:     document.getElementById("noUpb").value,
+    tanggal:   document.getElementById("tanggal").value,
+    material:  dataMaterial,
+    aksesoris: dataAksesoris,
+    jasaDesc:  document.getElementById("jasaDesc").value,
+    jasaQty:   parseInt(document.getElementById("jasaQty").value)||0,
     jasaHarga: parseAngka(document.getElementById("jasaHarga").value),
   };
-  showToast("⏳ Mengirim...", "#6b7280");
+
+  showToast("⏳ Mengirim ke Sheets...", "#6b7280");
   try {
     await fetch(url, { method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
     bootstrap.Modal.getInstance(document.getElementById("modalSheets"))?.hide();
-    showToast("✓ Berhasil dikirim ke Sheets!", "#34a853");
-  } catch(e) { showToast("❌ Gagal: "+e.message, "#ef4444"); }
+    showToast("✓ Berhasil dikirim ke Google Sheets!", "#34a853");
+  } catch(err) {
+    showToast("❌ Gagal: " + err.message, "#ef4444");
+  }
 }
 
+// ── Firebase Config (hardcoded) ───────────────────────
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBjTKyBkKdZ9d1p2XS2PrLMpHsvvqK0jYk",
+  authDomain: "form-pesanan-uniq.firebaseapp.com",
+  databaseURL: "https://form-pesanan-uniq-default-rtdb.firebaseio.com",
+  projectId: "form-pesanan-uniq",
+  storageBucket: "form-pesanan-uniq.firebasestorage.app",
+  messagingSenderId: "507202084583",
+  appId: "1:507202084583:web:b097401aefce60bd03cc42",
+  measurementId: "G-2V4LXTE49H"
+};
+
 // ── Init ──────────────────────────────────────────────
-muatData();
+// Muat localStorage dulu (instant)
+try {
+  const raw = localStorage.getItem("formPemesan");
+  if (raw) muatDariObject(JSON.parse(raw));
+} catch(e) {}
+
 if (!document.getElementById("tanggal").value)
   document.getElementById("tanggal").valueAsDate = new Date();
 document.getElementById("noOrder").addEventListener("input", hitungSemua);
@@ -605,6 +502,28 @@ document.getElementById("noUpb").addEventListener("input", hitungSemua);
 renderTabel("bodyMaterial",  dataMaterial);
 renderTabel("bodyAksesoris", dataAksesoris);
 hitungSemua();
+
+// Auto-connect Firebase tanpa perlu setup manual
+setSyncStatus("syncing", "Menyambungkan...");
+try {
+  let app;
+  try { app = firebase.app(); } catch(e) { app = firebase.initializeApp(FIREBASE_CONFIG); }
+  fbDatabase = firebase.database();
+  fbDatabase.ref("formPemesan").on("value", (snap) => {
+    const data = snap.val();
+    if (data) {
+      muatDariObject(data);
+      setSyncStatus("synced", "Tersinkron real-time ☁️");
+    } else {
+      simpanKeFirebase();
+      setSyncStatus("synced", "Tersinkron real-time ☁️");
+    }
+  }, (err) => {
+    setSyncStatus("offline", "Gagal: " + err.message);
+  });
+} catch(e) {
+  setSyncStatus("offline", "Firebase error: " + e.message);
+}
 </script>
 </body>
 </html>
