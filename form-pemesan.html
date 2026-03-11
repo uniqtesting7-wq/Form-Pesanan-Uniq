@@ -37,6 +37,11 @@
     @keyframes fadeInUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
     .script-box { background:#f8faff; border-radius:8px; padding:10px; font-size:11px;
       font-family:monospace; border:1px solid #e5e7eb; white-space:pre-wrap; max-height:160px; overflow-y:auto; }
+    .sync-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:5px; }
+    .sync-dot.synced  { background:#4ade80; }
+    .sync-dot.syncing { background:#fbbf24; animation: pulse 1s infinite; }
+    .sync-dot.offline { background:#f87171; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
     @media print {
       .no-print { display: none !important; }
       body { background: white; }
@@ -52,11 +57,17 @@
     <div>
       <div style="font-size:11px;letter-spacing:3px;opacity:.7">FORM PEMESAN</div>
       <div style="font-size:24px;font-weight:800">📦 Order List</div>
-      <div style="font-size:10px;opacity:.6;margin-top:4px" class="no-print">● Auto-save aktif</div>
+      <div style="font-size:10px;opacity:.85;margin-top:4px" class="no-print" id="syncStatus">
+        <span class="sync-dot syncing"></span>Menghubungkan...
+      </div>
     </div>
     <div class="no-print d-flex flex-wrap gap-2">
       <button class="btn btn-light btn-sm fw-semibold" onclick="simpanLokal()">
         <i class="bi bi-floppy me-1"></i>Simpan
+      </button>
+      <button class="btn btn-sm fw-semibold" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3)"
+        data-bs-toggle="modal" data-bs-target="#modalFirebase">
+        <i class="bi bi-cloud me-1"></i>Firebase
       </button>
       <button class="btn btn-sm fw-semibold" style="background:#25D366;color:white;border:none" onclick="kirimWA()">
         <i class="bi bi-whatsapp me-1"></i>WA
@@ -174,8 +185,57 @@
   <div class="text-center mt-3 no-print" style="color:#9ca3af;font-size:11px">Data tersimpan otomatis di browser ini</div>
 </div>
 
-<!-- Toast -->
-<div id="toast"></div>
+<!-- Modal Firebase Setup -->
+<div class="modal fade" id="modalFirebase" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px;border:none">
+      <div class="modal-header border-0 pb-0">
+        <h6 class="modal-title fw-bold"><i class="bi bi-cloud-fill me-2" style="color:#f59e0b"></i>Setup Firebase Sync</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning py-2 px-3 mb-3" style="font-size:12px;border-radius:8px">
+          <strong>Setup sekali saja — gratis selamanya</strong><br>
+          Setelah ini, semua perangkat yang buka URL yang sama akan sinkron otomatis secara real-time.
+        </div>
+        <div style="font-size:12px;line-height:1.8;color:#374151" class="mb-3">
+          <strong>Langkah-langkah:</strong><br>
+          1. Buka <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a><br>
+          2. Klik <strong>Add project</strong> → isi nama → klik Continue sampai selesai<br>
+          3. Di dashboard project, klik ikon <strong>&lt;/&gt;</strong> (Web app)<br>
+          4. Isi nama app → klik <strong>Register app</strong><br>
+          5. Copy nilai <code>firebaseConfig</code> yang muncul<br>
+          6. Paste di kolom bawah ini<br>
+          7. Di sidebar kiri: <strong>Build → Realtime Database → Create database</strong><br>
+          &nbsp;&nbsp;&nbsp;Pilih <em>Start in test mode</em> → Enable
+        </div>
+        <div class="mb-3">
+          <label class="form-label" style="font-size:11px;font-weight:700;color:#6b7280">Firebase Config (JSON):</label>
+          <textarea class="form-control form-control-sm" id="firebaseConfigInput" rows="7"
+            style="font-family:monospace;font-size:11px"
+            placeholder='{
+  "apiKey": "AIza...",
+  "authDomain": "project.firebaseapp.com",
+  "databaseURL": "https://project-default-rtdb.firebaseio.com",
+  "projectId": "project-id",
+  "storageBucket": "project.appspot.com",
+  "messagingSenderId": "123456",
+  "appId": "1:123:web:abc"
+}'></textarea>
+          <div style="font-size:10px;color:#9ca3af;margin-top:4px">Config disimpan di browser, tidak perlu isi ulang</div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-sm fw-semibold" style="background:#f59e0b;color:white;border:none" onclick="simpanKonfigFirebase()">
+          <i class="bi bi-cloud-check me-1"></i>Sambungkan
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
 <!-- Modal Google Sheets -->
 <div class="modal fade" id="modalSheets" tabindex="-1">
@@ -219,6 +279,28 @@
   </div>
 </div>
 
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp }        from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  window._fbInit = function(config) {
+    try {
+      const app = initializeApp(config);
+      const db  = getDatabase(app);
+      const DOC = ref(db, "formPemesan/data");
+
+      // Expose ke global scope
+      window._fbSet = (data) => set(DOC, data);
+      window._fbOn  = (cb)   => onValue(DOC, snap => cb(snap.val()));
+
+      setSyncStatus("synced", "✓ Firebase terhubung");
+    } catch(e) {
+      setSyncStatus("offline", "Firebase error: " + e.message);
+    }
+  };
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // ── Data Default ───────────────────────────────────────
@@ -261,52 +343,131 @@ function showToast(msg, color="#1e3a8a") {
   setTimeout(() => t.classList.remove("show"), 2800);
 }
 
-// ── localStorage ──────────────────────────────────────
+// ── Sync Status ───────────────────────────────────────
+function setSyncStatus(state, msg) {
+  const el = document.getElementById("syncStatus");
+  if (!el) return;
+  const dot = `<span class="sync-dot ${state}"></span>`;
+  el.innerHTML = dot + msg;
+}
+
+// ── Firebase Config ───────────────────────────────────
+let fbSaveTimeout = null;
+let isLoadingFromFirebase = false;
+
+function simpanKonfigFirebase() {
+  const raw = document.getElementById("firebaseConfigInput").value.trim();
+  if (!raw) { showToast("⚠️ Isi config dulu!", "#f59e0b"); return; }
+  try {
+    const cfg = JSON.parse(raw);
+    if (!cfg.databaseURL) {
+      showToast("⚠️ Config harus punya databaseURL!", "#f59e0b"); return;
+    }
+    localStorage.setItem("firebaseConfig", JSON.stringify(cfg));
+    bootstrap.Modal.getInstance(document.getElementById("modalFirebase"))?.hide();
+    inisialisasiFirebase(cfg);
+    showToast("✓ Firebase tersambung!", "#f59e0b");
+  } catch(e) {
+    showToast("❌ Format JSON salah!", "#ef4444");
+  }
+}
+
+function inisialisasiFirebase(cfg) {
+  setSyncStatus("syncing", "Menghubungkan Firebase...");
+  if (typeof window._fbInit === "function") {
+    window._fbInit(cfg);
+    // Dengarkan perubahan real-time dari Firebase
+    setTimeout(() => {
+      if (typeof window._fbOn === "function") {
+        window._fbOn((data) => {
+          if (!data) return;
+          isLoadingFromFirebase = true;
+          muatDariObject(data);
+          isLoadingFromFirebase = false;
+          setSyncStatus("synced", "Tersinkron real-time ☁️");
+        });
+      }
+    }, 800);
+  }
+}
+
+// ── localStorage + Firebase hybrid ───────────────────
 function autoSave() {
   hitungSemua();
-  try {
-    localStorage.setItem("formPemesan", JSON.stringify({
-      pelanggan: {
-        nama:    document.getElementById("namaPelanggan").value,
-        noOrder: document.getElementById("noOrder").value,
-        noUpb:   document.getElementById("noUpb").value,
-        tanggal: document.getElementById("tanggal").value,
-      },
-      material:  dataMaterial,
-      aksesoris: dataAksesoris,
-      jasa: {
-        desc:  document.getElementById("jasaDesc").value,
-        qty:   document.getElementById("jasaQty").value,
-        harga: document.getElementById("jasaHarga").value,
-      }
-    }));
-  } catch(e) {}
+  const state = ambilState();
+
+  // Selalu simpan ke localStorage sebagai backup
+  try { localStorage.setItem("formPemesan", JSON.stringify(state)); } catch(e) {}
+
+  // Kirim ke Firebase dengan debounce 800ms
+  if (typeof window._fbSet === "function") {
+    setSyncStatus("syncing", "Menyimpan...");
+    clearTimeout(fbSaveTimeout);
+    fbSaveTimeout = setTimeout(() => {
+      window._fbSet(state)
+        .then(() => setSyncStatus("synced", "Tersinkron real-time ☁️"))
+        .catch(() => setSyncStatus("offline", "Gagal sync, tersimpan lokal"));
+    }, 800);
+  }
 }
 
 function simpanLokal() {
   autoSave();
-  showToast("✓ Tersimpan di browser!", "#22c55e");
+  showToast("✓ Tersimpan!", "#22c55e");
+}
+
+function ambilState() {
+  return {
+    pelanggan: {
+      nama:    document.getElementById("namaPelanggan").value,
+      noOrder: document.getElementById("noOrder").value,
+      noUpb:   document.getElementById("noUpb").value,
+      tanggal: document.getElementById("tanggal").value,
+    },
+    material:  dataMaterial,
+    aksesoris: dataAksesoris,
+    jasa: {
+      desc:  document.getElementById("jasaDesc").value,
+      qty:   document.getElementById("jasaQty").value,
+      harga: document.getElementById("jasaHarga").value,
+    }
+  };
+}
+
+function muatDariObject(s) {
+  if (!s) return;
+  if (s.pelanggan) {
+    document.getElementById("namaPelanggan").value = s.pelanggan.nama    || "";
+    document.getElementById("noOrder").value       = s.pelanggan.noOrder || "";
+    document.getElementById("noUpb").value         = s.pelanggan.noUpb   || "";
+    document.getElementById("tanggal").value       = s.pelanggan.tanggal || "";
+  }
+  if (s.material  && s.material.length)  { dataMaterial  = s.material;  renderTabel("bodyMaterial",  dataMaterial); }
+  if (s.aksesoris && s.aksesoris.length) { dataAksesoris = s.aksesoris; renderTabel("bodyAksesoris", dataAksesoris); }
+  if (s.jasa) {
+    document.getElementById("jasaDesc").value  = s.jasa.desc  || "";
+    document.getElementById("jasaQty").value   = s.jasa.qty   || 0;
+    document.getElementById("jasaHarga").value = s.jasa.harga || "";
+  }
+  hitungSemua();
 }
 
 function muatData() {
+  // 1. Coba muat dari localStorage dulu (cepat)
   try {
     const raw = localStorage.getItem("formPemesan");
-    if (!raw) return;
-    const s = JSON.parse(raw);
-    if (s.pelanggan) {
-      document.getElementById("namaPelanggan").value = s.pelanggan.nama    || "";
-      document.getElementById("noOrder").value       = s.pelanggan.noOrder || "";
-      document.getElementById("noUpb").value         = s.pelanggan.noUpb   || "";
-      document.getElementById("tanggal").value       = s.pelanggan.tanggal || "";
+    if (raw) muatDariObject(JSON.parse(raw));
+  } catch(e) {}
+
+  // 2. Coba sambungkan Firebase jika config sudah ada
+  try {
+    const fbCfg = localStorage.getItem("firebaseConfig");
+    if (fbCfg) {
+      document.getElementById("firebaseConfigInput").value = fbCfg;
+      inisialisasiFirebase(JSON.parse(fbCfg));
+    } else {
+      setSyncStatus("offline", "Firebase belum setup — klik tombol ☁️");
     }
-    if (s.material  && s.material.length)  dataMaterial  = s.material;
-    if (s.aksesoris && s.aksesoris.length) dataAksesoris = s.aksesoris;
-    if (s.jasa) {
-      document.getElementById("jasaDesc").value  = s.jasa.desc  || "";
-      document.getElementById("jasaQty").value   = s.jasa.qty   || 0;
-      document.getElementById("jasaHarga").value = s.jasa.harga || "";
-    }
-    // Load sheets URL
     const url = localStorage.getItem("sheetsUrl");
     if (url) document.getElementById("sheetsUrl").value = url;
   } catch(e) {}
