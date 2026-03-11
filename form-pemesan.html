@@ -10,7 +10,35 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
     body { background:#f0f4f8; font-family:'Segoe UI',sans-serif; }
-    .header-card { background:linear-gradient(135deg,#1e3a8a,#2563eb); border-radius:14px; color:white; padding:28px 32px; margin-bottom:20px; }
+    .header-card { background:linear-gradient(135deg,#1e3a8a,#2563eb); border-radius:14px; color:white; padding:24px 28px 0 28px; margin-bottom:20px; }
+    .header-top  { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; padding-bottom:16px; }
+
+    /* ── Tabs ── */
+    .tabs-wrap { display:flex; align-items:flex-end; gap:4px; overflow-x:auto; scrollbar-width:none; }
+    .tabs-wrap::-webkit-scrollbar { display:none; }
+    .tab-btn {
+      flex-shrink:0; padding:8px 14px 9px; border:none; border-radius:10px 10px 0 0;
+      background:rgba(255,255,255,0.15); color:rgba(255,255,255,0.8);
+      font-size:13px; font-weight:600; cursor:pointer; transition:all .18s;
+      display:flex; align-items:center; gap:7px; white-space:nowrap; outline:none;
+    }
+    .tab-btn:hover  { background:rgba(255,255,255,0.25); color:white; }
+    .tab-btn.active { background:white; color:#1e3a8a; }
+    .tab-close {
+      width:17px; height:17px; border-radius:50%; background:rgba(0,0,0,0.12);
+      border:none; font-size:13px; line-height:17px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      color:inherit; flex-shrink:0; padding:0;
+    }
+    .tab-btn.active .tab-close { background:#fee2e2; color:#f43f5e; }
+    .tab-close:hover { background:#f43f5e !important; color:white !important; }
+    .btn-add-tab {
+      flex-shrink:0; margin-bottom:3px; width:30px; height:30px; border-radius:50%;
+      border:2px dashed rgba(255,255,255,0.5); background:transparent; color:white;
+      font-size:20px; cursor:pointer; display:flex; align-items:center;
+      justify-content:center; transition:all .18s; line-height:1;
+    }
+    .btn-add-tab:hover { background:rgba(255,255,255,0.2); border-color:white; }
     .section-card { background:white; border-radius:12px; padding:24px; box-shadow:0 1px 4px rgba(0,0,0,0.07); margin-bottom:20px; }
     .section-label { font-size:11px; font-weight:700; color:#6b7280; letter-spacing:1.5px; margin-bottom:14px; }
     .table thead th { background:#f8faff; font-size:11px; font-weight:700; color:#6b7280; letter-spacing:0.5px; border-bottom:2px solid #e5e7eb; }
@@ -38,11 +66,11 @@
     /* ── Responsive Mobile ───────────────────────────── */
     @media (max-width: 767px) {
       .container { padding-left:12px !important; padding-right:12px !important; }
-      .header-card { padding:18px 16px; border-radius:12px; }
-      .header-card > .d-flex { flex-direction:column; align-items:flex-start !important; gap:12px !important; }
-      .header-card div:nth-child(2) { font-size:20px !important; }
-      .header-card .no-print { width:100%; display:grid !important; grid-template-columns:1fr 1fr; gap:7px; }
-      .header-card .no-print .btn { width:100%; justify-content:center; display:flex; align-items:center; padding:7px 4px; font-size:12px; }
+      .header-card { padding:16px 14px 0 14px; border-radius:12px; }
+      .header-top  { padding-bottom:12px; gap:10px; }
+      .header-top .no-print { width:100%; display:grid !important; grid-template-columns:1fr 1fr; gap:7px; }
+      .header-top .no-print .btn { width:100%; justify-content:center; display:flex; align-items:center; padding:7px 4px; font-size:12px; }
+      .tab-btn { padding:6px 10px 8px; font-size:12px; }
       .section-card { padding:14px 12px; }
       /* Tabel scroll horizontal di mobile */
       .table-responsive { overflow-x:auto; -webkit-overflow-scrolling:touch; }
@@ -79,28 +107,34 @@
 <div class="container py-4" style="max-width:900px">
 
   <!-- Header -->
-  <div class="header-card d-flex justify-content-between align-items-center flex-wrap gap-3">
-    <div>
-      <div style="font-size:11px;letter-spacing:3px;opacity:.7">FORM ORDER</div>
-      <div style="font-size:24px;font-weight:800">📦 UNIQ CELL</div>
-      <div style="font-size:10px;margin-top:5px" class="no-print" id="syncStatus">
-        <span class="sync-dot syncing"></span>Menyambungkan Firebase...
+  <div class="header-card">
+    <div class="header-top">
+      <div>
+        <div style="font-size:11px;letter-spacing:3px;opacity:.7">FORM ORDER</div>
+        <div style="font-size:24px;font-weight:800">📦 UNIQ CELL</div>
+        <div style="font-size:10px;margin-top:5px" class="no-print" id="syncStatus">
+          <span class="sync-dot syncing"></span>Menyambungkan Firebase...
+        </div>
+      </div>
+      <div class="no-print d-flex flex-wrap gap-2" style="align-items:flex-start">
+        <button class="btn btn-light btn-sm fw-semibold" onclick="simpanManual()">
+          <i class="bi bi-floppy me-1"></i>Simpan
+        </button>
+        <button class="btn btn-sm fw-semibold" style="background:#25D366;color:white;border:none" onclick="kirimWA()">
+          <i class="bi bi-whatsapp me-1"></i>WA
+        </button>
+        <button class="btn btn-sm fw-semibold" style="background:#34a853;color:white;border:none"
+          data-bs-toggle="modal" data-bs-target="#modalSheets">
+          <i class="bi bi-table me-1"></i>Sheets
+        </button>
+        <button class="btn btn-sm fw-semibold" style="background:rgba(255,255,255,0.2);color:white;border:none" onclick="window.print()">
+          <i class="bi bi-printer me-1"></i>Cetak
+        </button>
       </div>
     </div>
-    <div class="no-print d-flex flex-wrap gap-2">
-      <button class="btn btn-light btn-sm fw-semibold" onclick="simpanManual()">
-        <i class="bi bi-floppy me-1"></i>Simpan
-      </button>
-      <button class="btn btn-sm fw-semibold" style="background:#25D366;color:white;border:none" onclick="kirimWA()">
-        <i class="bi bi-whatsapp me-1"></i>WA
-      </button>
-      <button class="btn btn-sm fw-semibold" style="background:#34a853;color:white;border:none"
-        data-bs-toggle="modal" data-bs-target="#modalSheets">
-        <i class="bi bi-table me-1"></i>Sheets
-      </button>
-      <button class="btn btn-sm fw-semibold" style="background:rgba(255,255,255,0.2);color:white;border:none" onclick="window.print()">
-        <i class="bi bi-printer me-1"></i>Cetak
-      </button>
+    <!-- Tabs Pelanggan -->
+    <div class="tabs-wrap no-print" id="tabsWrap">
+      <button class="btn-add-tab" onclick="tambahPelanggan()" title="Tambah pelanggan baru">+</button>
     </div>
   </div>
 
@@ -207,6 +241,30 @@
 
 <div id="toast"></div>
 
+<!-- Modal Tambah Pelanggan -->
+<div class="modal fade" id="modalTambah" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content" style="border-radius:14px;border:none">
+      <div class="modal-header border-0 pb-0">
+        <h6 class="modal-title fw-bold">👤 Pelanggan Baru</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label" style="font-size:11px;font-weight:700;color:#6b7280">Nama Pelanggan</label>
+        <input type="text" class="form-control form-control-sm" id="inputNamaBaru"
+          placeholder="contoh: Ko Budi Toko Merah"
+          onkeydown="if(event.key==='Enter') konfirmasiTambah()"/>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-sm fw-semibold" style="background:#2563eb;color:white;border:none" onclick="konfirmasiTambah()">
+          <i class="bi bi-plus-lg me-1"></i>Tambah
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Google Sheets -->
 <div class="modal fade" id="modalSheets" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
@@ -256,44 +314,35 @@ firebase.initializeApp({
   messagingSenderId: "507202084583",
   appId: "1:507202084583:web:b097401aefce60bd03cc42"
 });
-const db = firebase.database();
-const dbRef = db.ref("formPemesan");
+const db    = firebase.database();
+const dbRef = db.ref("appData"); // ← path baru agar tidak bentrok
 
-// ── Data Default ───────────────────────────────────────
-const DEF_MATERIAL = [
-  { nama:"Camera Analog Hikvison 16D0T EXLPF", qty:14,  harga:365000 },
-  { nama:"Camera Analog Hikvison 10K0T LPFS",  qty:2,   harga:1154000 },
-  { nama:"Hardisk 2TB Skyhawk Survilance",      qty:1,   harga:1965000 },
-  { nama:"DVR 7216HQHI-M1/XT",                 qty:1,   harga:3675000 },
-  { nama:"PSU Box 20A",                         qty:1,   harga:275000 },
-  { nama:"Kabel RG6+P Ahtech",                  qty:260, harga:4000 },
-  { nama:"Pipa Conduit 20mm Putih (Niso)",      qty:80,  harga:13000 },
-  { nama:"Kabel Lan UTP cat6 Dahua",            qty:10,  harga:5000 },
-  { nama:"Rak Server Single 6U Sinorack",       qty:1,   harga:600000 },
-  { nama:"Sok Niso",                            qty:44,  harga:0 },
-  { nama:"Duradus Dexta",                       qty:24,  harga:9000 },
-  { nama:"Duradus Dexta 75",                    qty:2,   harga:0 },
-  { nama:"Kabel Duct 50x50",                    qty:10,  harga:50000 },
-  { nama:"Kabel Ties Kecil",                    qty:1,   harga:0 },
-  { nama:"Kabel Ties Besar",                    qty:1,   harga:0 },
-  { nama:"Solasi National",                     qty:3,   harga:0 },
-];
-const DEF_AKSESORIS = [
-  { nama:"Dc Male",                    qty:16, harga:3500 },
-  { nama:"Bnc Drat",                   qty:32, harga:5000 },
-  { nama:"Rj45",                       qty:6,  harga:2500 },
-  { nama:"Matsui Steker arde MT-3000", qty:1,  harga:5000 },
-];
-const DEF_JASA = { desc:"Jasa Pemasangan + Setting", qty:16, harga:200000 };
+// ── Data Default (form KOSONG untuk pelanggan baru) ────
+const DEF_JASA = { desc:"Jasa Pemasangan + Setting", qty:"", harga:"" };
 
-let dataMaterial  = JSON.parse(JSON.stringify(DEF_MATERIAL));
-let dataAksesoris = JSON.parse(JSON.stringify(DEF_AKSESORIS));
-let saveTimer     = null;
-let isFromFirebase = false; // flag agar listener tidak loop
+function formKosong(nama) {
+  return {
+    pelanggan: { nama: nama || "", noOrder:"", noUpb:"", tanggal: new Date().toISOString().split("T")[0] },
+    material:  [{ nama:"", qty:1, harga:0 }],
+    aksesoris: [{ nama:"", qty:1, harga:0 }],
+    jasa:      { ...DEF_JASA }
+  };
+}
+
+// ── State Global ───────────────────────────────────────
+let pelangganList  = [];  // [{ id, nama }]
+let allData        = {};  // { [id]: { pelanggan, material, aksesoris, jasa } }
+let activeId       = null;
+let saveTimer      = null;
+let isFromFirebase = false;
+
+let dataMaterial  = [{ nama:"", qty:1, harga:0 }];
+let dataAksesoris = [{ nama:"", qty:1, harga:0 }];
 
 // ── Util ───────────────────────────────────────────────
 const formatRp   = n => "Rp " + Number(n||0).toLocaleString("id-ID");
 const parseAngka = s => parseInt(String(s).replace(/[^0-9]/g,""))||0;
+const uid        = () => Date.now().toString(36) + Math.random().toString(36).slice(2,5);
 
 function showToast(msg, color="#1e3a8a") {
   const t = document.getElementById("toast");
@@ -301,13 +350,73 @@ function showToast(msg, color="#1e3a8a") {
   t.classList.add("show");
   setTimeout(() => t.classList.remove("show"), 2800);
 }
-
 function setSyncStatus(state, msg) {
   const el = document.getElementById("syncStatus");
   if (el) el.innerHTML = `<span class="sync-dot ${state}"></span>${msg}`;
 }
 
-// ── Ambil semua nilai form ─────────────────────────────
+// ── Tabs ───────────────────────────────────────────────
+function renderTabs() {
+  const wrap   = document.getElementById("tabsWrap");
+  const addBtn = wrap.querySelector(".btn-add-tab");
+  wrap.querySelectorAll(".tab-btn").forEach(el => el.remove());
+  pelangganList.forEach(p => {
+    const btn = document.createElement("button");
+    btn.className = "tab-btn" + (p.id === activeId ? " active" : "");
+    btn.innerHTML = `<span>${p.nama || "Pelanggan"}</span>
+      <button class="tab-close" title="Hapus" onclick="event.stopPropagation();hapusPelanggan('${p.id}')">×</button>`;
+    btn.onclick = () => gantiTab(p.id);
+    wrap.insertBefore(btn, addBtn);
+  });
+}
+
+function gantiTab(id) {
+  if (activeId === id) return;
+  if (activeId) simpanStateAktif();
+  activeId = id;
+  renderTabs();
+  isiForm(allData[id] || formKosong());
+}
+
+function tambahPelanggan() {
+  document.getElementById("inputNamaBaru").value = "";
+  new bootstrap.Modal(document.getElementById("modalTambah")).show();
+  setTimeout(() => document.getElementById("inputNamaBaru").focus(), 400);
+}
+
+function konfirmasiTambah() {
+  const nama = document.getElementById("inputNamaBaru").value.trim();
+  if (!nama) { showToast("⚠️ Isi nama dulu!", "#f59e0b"); return; }
+  bootstrap.Modal.getInstance(document.getElementById("modalTambah"))?.hide();
+
+  const id = uid();
+  pelangganList.push({ id, nama });
+  allData[id] = formKosong(nama); // ← form KOSONG, bukan copy lama
+
+  if (activeId) simpanStateAktif();
+  activeId = id;
+  renderTabs();
+  isiForm(allData[id]);
+  simpanKeFirebase();
+  showToast("✓ Pelanggan baru ditambahkan!", "#2563eb");
+}
+
+function hapusPelanggan(id) {
+  if (pelangganList.length <= 1) { showToast("⚠️ Minimal harus ada 1 pelanggan!", "#f59e0b"); return; }
+  const nama = pelangganList.find(p => p.id === id)?.nama || "ini";
+  if (!confirm(`Hapus data "${nama}"?`)) return;
+  pelangganList = pelangganList.filter(p => p.id !== id);
+  delete allData[id];
+  if (activeId === id) {
+    activeId = pelangganList[0].id;
+    isiForm(allData[activeId] || formKosong());
+  }
+  renderTabs();
+  simpanKeFirebase();
+  showToast("Data dihapus", "#6b7280");
+}
+
+// ── Form State ────────────────────────────────────────
 function ambilState() {
   return {
     pelanggan: {
@@ -326,60 +435,81 @@ function ambilState() {
   };
 }
 
-// ── Isi form dari object ───────────────────────────────
+function simpanStateAktif() {
+  if (!activeId) return;
+  allData[activeId] = ambilState();
+  // Sync nama tab dengan isi field
+  const idx = pelangganList.findIndex(p => p.id === activeId);
+  if (idx >= 0) {
+    const namaBaru = document.getElementById("namaPelanggan").value.trim();
+    if (namaBaru) pelangganList[idx].nama = namaBaru;
+  }
+}
+
 function isiForm(s) {
   if (!s) return;
-  if (s.pelanggan) {
-    document.getElementById("namaPelanggan").value = s.pelanggan.nama    || "";
-    document.getElementById("noOrder").value       = s.pelanggan.noOrder || "";
-    document.getElementById("noUpb").value         = s.pelanggan.noUpb   || "";
-    document.getElementById("tanggal").value       = s.pelanggan.tanggal || "";
-  }
-  if (s.material  && s.material.length)  dataMaterial  = s.material;
-  if (s.aksesoris && s.aksesoris.length) dataAksesoris = s.aksesoris;
-  if (s.jasa) {
-    document.getElementById("jasaDesc").value  = s.jasa.desc  || DEF_JASA.desc;
-    document.getElementById("jasaQty").value   = s.jasa.qty   || DEF_JASA.qty;
-    document.getElementById("jasaHarga").value = s.jasa.harga || DEF_JASA.harga.toLocaleString("id-ID");
-  }
+  const p = s.pelanggan || {};
+  document.getElementById("namaPelanggan").value = p.nama    || "";
+  document.getElementById("noOrder").value       = p.noOrder || "";
+  document.getElementById("noUpb").value         = p.noUpb   || "";
+  document.getElementById("tanggal").value       = p.tanggal || new Date().toISOString().split("T")[0];
+
+  dataMaterial  = (s.material  && s.material.length)  ? s.material  : [{ nama:"", qty:1, harga:0 }];
+  dataAksesoris = (s.aksesoris && s.aksesoris.length) ? s.aksesoris : [{ nama:"", qty:1, harga:0 }];
+
+  const j = s.jasa || {};
+  document.getElementById("jasaDesc").value  = j.desc  || DEF_JASA.desc;
+  document.getElementById("jasaQty").value   = j.qty   || "";
+  document.getElementById("jasaHarga").value = j.harga || "";
+
   renderTabel("bodyMaterial",  dataMaterial);
   renderTabel("bodyAksesoris", dataAksesoris);
   hitungSemua();
 }
 
-// ── Firebase: simpan ──────────────────────────────────
+// ── Firebase ──────────────────────────────────────────
 function simpanKeFirebase() {
   setSyncStatus("syncing", "Menyimpan...");
-  dbRef.set(ambilState())
+  dbRef.set({ pelangganList, data: allData })
     .then(() => setSyncStatus("synced", "Tersinkron real-time ☁️"))
     .catch(e => { setSyncStatus("error", "Gagal sync"); showToast("❌ " + e.message, "#ef4444"); });
 }
 
-// ── Auto save dengan debounce ─────────────────────────
 function autoSave() {
-  if (isFromFirebase) return; // jangan save balik saat sedang load dari Firebase
+  if (isFromFirebase) return;
+  simpanStateAktif();
+  renderTabs();
   hitungSemua();
   clearTimeout(saveTimer);
   saveTimer = setTimeout(simpanKeFirebase, 1000);
 }
 
 function simpanManual() {
+  simpanStateAktif();
   simpanKeFirebase();
   showToast("✓ Tersimpan!", "#22c55e");
 }
 
-// ── Firebase: dengarkan perubahan real-time ───────────
+// ── Firebase listener ─────────────────────────────────
 dbRef.on("value", (snap) => {
-  const data = snap.val();
-  if (data) {
-    isFromFirebase = true;
-    isiForm(data);
-    isFromFirebase = false;
-    setSyncStatus("synced", "Tersinkron real-time ☁️");
+  const raw = snap.val();
+  isFromFirebase = true;
+  if (raw && raw.pelangganList && raw.pelangganList.length) {
+    pelangganList = raw.pelangganList;
+    allData       = raw.data || {};
+    if (!activeId || !pelangganList.find(p => p.id === activeId))
+      activeId = pelangganList[0].id;
   } else {
-    // Database kosong → upload data default
-    simpanKeFirebase();
+    // Database kosong — buat 1 pelanggan kosong
+    const id = uid();
+    pelangganList = [{ id, nama:"Pelanggan 1" }];
+    allData = { [id]: formKosong("Pelanggan 1") };
+    activeId = id;
   }
+  renderTabs();
+  isiForm(allData[activeId] || formKosong());
+  setSyncStatus("synced", "Tersinkron real-time ☁️");
+  isFromFirebase = false;
 }, (err) => {
   setSyncStatus("error", "❌ " + err.message);
   showToast("Firebase error: " + err.message, "#ef4444");
@@ -399,7 +529,7 @@ function renderTabel(bodyId, data) {
         value="${(item.nama||"").replace(/"/g,"&quot;")}"
         oninput="updateItem('${bodyId}',${i},'nama',this.value)"/></td>
       <td><input type="number" class="form-control form-control-sm text-center"
-        value="${item.qty||0}" min="0"
+        value="${item.qty||""}" min="0"
         oninput="updateItem('${bodyId}',${i},'qty',this.value)"/></td>
       <td><input type="text" class="form-control form-control-sm text-end"
         value="${item.harga ? Number(item.harga).toLocaleString("id-ID") : ""}"
@@ -439,6 +569,7 @@ function tambahItem(tipe) {
 
 function hapusItem(bodyId, idx) {
   const data = bodyId==="bodyMaterial" ? dataMaterial : dataAksesoris;
+  if (data.length <= 1) { showToast("⚠️ Minimal 1 baris!", "#f59e0b"); return; }
   data.splice(idx, 1);
   renderTabel(bodyId, data);
   autoSave();
@@ -514,9 +645,10 @@ async function kirimSheets() {
   const url = document.getElementById("sheetsUrl").value.trim();
   if (!url) { showToast("⚠️ Isi URL dulu!", "#f59e0b"); return; }
   localStorage.setItem("sheetsUrl", url);
-  const payload = { ...ambilState(), jasaDesc: document.getElementById("jasaDesc").value,
-    jasaQty: parseInt(document.getElementById("jasaQty").value)||0,
-    jasaHarga: parseAngka(document.getElementById("jasaHarga").value) };
+  const s = ambilState();
+  const payload = { nama:s.pelanggan.nama, noOrder:s.pelanggan.noOrder, noUpb:s.pelanggan.noUpb,
+    tanggal:s.pelanggan.tanggal, material:s.material, aksesoris:s.aksesoris,
+    jasaDesc:s.jasa.desc, jasaQty:parseInt(s.jasa.qty)||0, jasaHarga:parseAngka(s.jasa.harga) };
   showToast("⏳ Mengirim...", "#6b7280");
   try {
     await fetch(url, { method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
@@ -525,18 +657,11 @@ async function kirimSheets() {
   } catch(e) { showToast("❌ Gagal: "+e.message, "#ef4444"); }
 }
 
-// ── Init UI ───────────────────────────────────────────
-document.getElementById("tanggal").valueAsDate = new Date();
-document.getElementById("jasaDesc").value  = DEF_JASA.desc;
-document.getElementById("jasaQty").value   = DEF_JASA.qty;
-document.getElementById("jasaHarga").value = DEF_JASA.harga.toLocaleString("id-ID");
-const savedUrl = localStorage.getItem("sheetsUrl");
-if (savedUrl) document.getElementById("sheetsUrl").value = savedUrl;
+// ── Init ──────────────────────────────────────────────
 document.getElementById("noOrder").addEventListener("input", hitungSemua);
 document.getElementById("noUpb").addEventListener("input", hitungSemua);
-renderTabel("bodyMaterial",  dataMaterial);
-renderTabel("bodyAksesoris", dataAksesoris);
-hitungSemua();
+const savedUrl = localStorage.getItem("sheetsUrl");
+if (savedUrl) document.getElementById("sheetsUrl").value = savedUrl;
 </script>
 </body>
 </html>
