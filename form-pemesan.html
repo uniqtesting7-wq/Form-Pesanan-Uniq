@@ -234,16 +234,21 @@
         <input type="text" class="form-control form-control-sm" id="namaPelanggan" oninput="autoSave()"/>
       </div>
       <div class="col-md-6">
-        <label class="form-label" style="font-size:11px;color:#9ca3af">No. PT</label>
-        <input type="text" class="form-control form-control-sm" id="noOrder" oninput="autoSave()"/>
+        <label class="form-label" style="font-size:11px;color:#9ca3af">Tanggal</label>
+        <input type="date" class="form-control form-control-sm" id="tanggal" oninput="autoSave()"/>
       </div>
-      <div class="col-md-6">
+      <div class="col-12">
         <label class="form-label" style="font-size:11px;color:#9ca3af">No. UPB</label>
         <input type="text" class="form-control form-control-sm" id="noUpb" oninput="autoSave()"/>
       </div>
-      <div class="col-md-6">
-        <label class="form-label" style="font-size:11px;color:#9ca3af">Tanggal</label>
-        <input type="date" class="form-control form-control-sm" id="tanggal" oninput="autoSave()"/>
+      <!-- No Order Dinamis -->
+      <div class="col-12">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <label class="form-label mb-0" style="font-size:11px;color:#9ca3af">NO. ORDER</label>
+          <button onclick="tambahNoOrder()" class="no-print"
+            style="background:#2563eb;color:white;border:none;border-radius:6px;padding:2px 10px;font-size:12px;font-weight:700;cursor:pointer">+ Tambah</button>
+        </div>
+        <div id="noOrderList"></div>
       </div>
     </div>
   </div>
@@ -276,7 +281,7 @@
   <!-- Aksesoris -->
   <div class="section-card">
     <div class="mb-3">
-      <div class="fw-bold" style="font-size:14px">🔩 Aksesoris</div>
+      <div class="fw-bold" style="font-size:14px">🔩 Material Support</div>
       <div style="font-size:11px;color:#9ca3af" id="labelUpb"></div>
     </div>
     <div class="table-responsive">
@@ -290,7 +295,7 @@
         </tr></thead>
         <tbody id="bodyAksesoris"></tbody>
         <tfoot><tr class="total-row">
-          <td colspan="4" class="text-end">Total Aksesoris:</td>
+          <td colspan="4" class="text-end">Total Material Support:</td>
           <td class="text-end" id="totalAksesoris">Rp 0</td>
           <td class="no-print"></td>
         </tr></tfoot>
@@ -578,9 +583,50 @@ async function gantiPassword() {
 
 // ── Default ────────────────────────────────────────────
 const DEF_JASA = { desc:"Jasa Pemasangan + Setting", qty:"", harga:"" };
+
+// ── No Order Dinamis ──────────────────────────────────
+function renderNoOrderList(list) {
+  const wrap = document.getElementById("noOrderList");
+  wrap.innerHTML = "";
+  list.forEach((val, i) => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;gap:6px;margin-bottom:6px;align-items:center";
+    row.innerHTML = `
+      <span style="font-size:11px;color:#9ca3af;font-weight:700;min-width:18px;text-align:right">${i+1}.</span>
+      <input type="text" class="form-control form-control-sm no-order-input"
+        placeholder="contoh: PT JL0001269"
+        value="${val.replace(/"/g,'&quot;')}"
+        oninput="autoSave()"/>
+      ${list.length > 1
+        ? `<button onclick="hapusNoOrder(${i})" class="no-print"
+            style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;
+            padding:2px 8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">×</button>`
+        : '<div style="width:30px"></div>'}`;
+    wrap.appendChild(row);
+  });
+}
+
+function tambahNoOrder() {
+  const current = Array.from(document.querySelectorAll(".no-order-input")).map(i => i.value);
+  current.push("");
+  renderNoOrderList(current);
+  // fokus ke input terakhir
+  const inputs = document.querySelectorAll(".no-order-input");
+  inputs[inputs.length - 1].focus();
+  autoSave();
+}
+
+function hapusNoOrder(idx) {
+  const current = Array.from(document.querySelectorAll(".no-order-input")).map(i => i.value);
+  if (current.length <= 1) return;
+  current.splice(idx, 1);
+  renderNoOrderList(current);
+  autoSave();
+}
+
 function formKosong() {
   return {
-    pelanggan: { nama:"", noOrder:"", noUpb:"", tanggal: new Date().toISOString().split("T")[0] },
+    pelanggan: { nama:"", noOrderList:[""], noUpb:"", tanggal: new Date().toISOString().split("T")[0] },
     material:  [{ nama:"", qty:1, harga:0 }],
     aksesoris: [{ nama:"", qty:1, harga:0 }],
     jasa:      { ...DEF_JASA }
@@ -675,10 +721,10 @@ function hapusPelanggan(id) {
 function ambilState() {
   return {
     pelanggan: {
-      nama:    document.getElementById("namaPelanggan").value,
-      noOrder: document.getElementById("noOrder").value,
-      noUpb:   document.getElementById("noUpb").value,
-      tanggal: document.getElementById("tanggal").value,
+      nama:        document.getElementById("namaPelanggan").value,
+      noOrderList: Array.from(document.querySelectorAll(".no-order-input")).map(i => i.value),
+      noUpb:       document.getElementById("noUpb").value,
+      tanggal:     document.getElementById("tanggal").value,
     },
     material:  dataMaterial,
     aksesoris: dataAksesoris,
@@ -704,9 +750,9 @@ function isiForm(s) {
   if (!s) return;
   const p = s.pelanggan || {};
   document.getElementById("namaPelanggan").value = p.nama    || "";
-  document.getElementById("noOrder").value       = p.noOrder || "";
   document.getElementById("noUpb").value         = p.noUpb   || "";
   document.getElementById("tanggal").value       = p.tanggal || new Date().toISOString().split("T")[0];
+  renderNoOrderList(p.noOrderList && p.noOrderList.length ? p.noOrderList : [""]);
   dataMaterial  = (s.material  && s.material.length)  ? s.material  : [{ nama:"", qty:1, harga:0 }];
   dataAksesoris = (s.aksesoris && s.aksesoris.length) ? s.aksesoris : [{ nama:"", qty:1, harga:0 }];
   const j = s.jasa || {};
@@ -830,14 +876,16 @@ function hitungSemua() {
   document.getElementById("totalAksesoris").textContent = formatRp(totalA);
   document.getElementById("jasaSubtotal").textContent   = formatRp(totalJ);
   document.getElementById("grandTotal").textContent     = formatRp(totalM+totalA+totalJ);
-  document.getElementById("labelOrder").textContent     = document.getElementById("noOrder").value;
-  document.getElementById("labelUpb").textContent       = document.getElementById("noUpb").value;
+  const orders = Array.from(document.querySelectorAll(".no-order-input")).map(i=>i.value).filter(Boolean);
+  document.getElementById("labelOrder").textContent = orders.join(" | ");
+  document.getElementById("labelUpb").textContent   = document.getElementById("noUpb").value;
 }
 
 // ── WhatsApp ──────────────────────────────────────────
 function kirimWA() {
   const nama  = document.getElementById("namaPelanggan").value;
-  const noOrd = document.getElementById("noOrder").value;
+  const noOrdList = Array.from(document.querySelectorAll(".no-order-input")).map(i=>i.value).filter(Boolean);
+  const noOrd = noOrdList.join(", ");
   const noUpb = document.getElementById("noUpb").value;
   const tgl   = document.getElementById("tanggal").value;
   const jasaQ = parseInt(document.getElementById("jasaQty").value)||0;
@@ -851,7 +899,7 @@ function kirimWA() {
   msg += "🔧 *Material Utama*\n";
   dataMaterial.forEach((i,n) => { if(i.nama) msg += `${n+1}. ${i.nama}\n    ${i.qty} pcs × ${formatRp(i.harga)} = *${formatRp(i.qty*i.harga)}*\n`; });
   msg += `_Subtotal: ${formatRp(totalM)}_\n\n`;
-  msg += "🔩 *Aksesoris*\n";
+  msg += "🔩 *Material Support*\n";
   dataAksesoris.forEach((i,n) => { if(i.nama) msg += `${n+1}. ${i.nama}\n    ${i.qty} pcs × ${formatRp(i.harga)} = *${formatRp(i.qty*i.harga)}*\n`; });
   msg += `_Subtotal: ${formatRp(totalA)}_\n\n`;
   msg += `👷 *${jasaD}*\n    ${jasaQ} pcs × ${formatRp(jasaH)} = *${formatRp(totalJ)}*\n\n`;
@@ -884,7 +932,7 @@ async function kirimSheets() {
   if (!url) { showToast("⚠️ Isi URL dulu!","#f59e0b"); return; }
   localStorage.setItem("sheetsUrl", url);
   const s = ambilState();
-  const payload = { nama:s.pelanggan.nama, noOrder:s.pelanggan.noOrder, noUpb:s.pelanggan.noUpb,
+  const payload = { nama:s.pelanggan.nama, noOrder:(s.pelanggan.noOrderList||[]).join(', '), noUpb:s.pelanggan.noUpb,
     tanggal:s.pelanggan.tanggal, material:s.material, aksesoris:s.aksesoris,
     jasaDesc:s.jasa.desc, jasaQty:parseInt(s.jasa.qty)||0, jasaHarga:parseAngka(s.jasa.harga) };
   showToast("⏳ Mengirim...","#6b7280");
@@ -1025,7 +1073,6 @@ async function adminHapusPelanggan(uname, pelId, pelNama) {
 }
 
 // ── Init ──────────────────────────────────────────────
-document.getElementById("noOrder").addEventListener("input", hitungSemua);
 document.getElementById("noUpb").addEventListener("input", hitungSemua);
 const savedUrl = localStorage.getItem("sheetsUrl");
 if (savedUrl) document.getElementById("sheetsUrl").value = savedUrl;
