@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rekap Bulanan — UNIQ CCTV AND NETWORK</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --navy:#0f1f5c; --blue:#1e3a8a; --mid:#2563eb; --sky:#3b82f6;
+      --light:#93c5fd; --bg:#f0f4fa; --card:#fff;
+      --border:#e2e8f0; --muted:#94a3b8; --text:#1e293b; --sub:#64748b;
+    }
+    *{box-sizing:border-box;}
+    body{background:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);margin:0;}
+
+    /* ── SIDEBAR ── */
+    .sidebar{position:fixed;top:0;left:0;height:100vh;width:260px;background:linear-gradient(175deg,var(--navy) 0%,var(--blue) 55%,var(--mid) 100%);display:flex;flex-direction:column;z-index:200;box-shadow:6px 0 30px rgba(15,31,92,0.22);transition:transform .35s;}
+    .sb-brand{padding:26px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:13px;}
+    .sb-brand .icon{font-size:30px;}
+    .sb-brand .name{font-size:11px;font-weight:900;color:#fff;letter-spacing:1.5px;line-height:1.2;}
+    .sb-brand .sub{font-size:9px;color:rgba(255,255,255,.45);letter-spacing:2.5px;}
+    .sb-nav{flex:1;padding:16px 12px;overflow-y:auto;}
+    .nav-lbl{font-size:9px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:2.5px;padding:14px 10px 6px;text-transform:uppercase;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:11px;color:rgba(255,255,255,.65);text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:2px;}
+    .nav-item:hover{background:rgba(255,255,255,.1);color:#fff;}
+    .nav-item.active{background:rgba(255,255,255,.16);color:#fff;box-shadow:inset 3px 0 0 var(--light);}
+    .nav-item i{font-size:16px;width:20px;text-align:center;}
+    .sb-footer{padding:14px 12px;border-top:1px solid rgba(255,255,255,.1);}
+    .user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.08);border-radius:11px;}
+    .user-chip .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#60a5fa,#93c5fd);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;}
+    .user-chip .un{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .user-chip .ur{font-size:10px;color:rgba(255,255,255,.45);}
+    .user-chip .lo{background:none;border:none;color:rgba(255,255,255,.45);cursor:pointer;font-size:16px;padding:2px;margin-left:auto;}
+    .user-chip .lo:hover{color:#fff;}
+    .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199;}
+    .topbar{display:none;background:linear-gradient(90deg,var(--navy),var(--mid));color:#fff;padding:0 16px;align-items:center;gap:12px;position:sticky;top:0;z-index:150;height:54px;}
+    .topbar .mb{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0;}
+    .topbar .ttl{font-size:14px;font-weight:800;letter-spacing:2px;}
+    .main-wrap{margin-left:260px;min-height:100vh;}
+    .content{padding:28px 32px 80px;max-width:1200px;margin:0 auto;}
+
+    /* ── PAGE HEADER ── */
+    .ph{background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 50%,var(--mid) 100%);border-radius:20px;padding:26px 30px;margin-bottom:24px;position:relative;overflow:hidden;}
+    .ph::before{content:'';position:absolute;top:-60px;right:-60px;width:240px;height:240px;border:1px solid rgba(255,255,255,.07);border-radius:50%;}
+    .ph-inner{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;position:relative;z-index:1;}
+    .ph-title{font-size:22px;font-weight:900;color:#fff;}
+    .ph-sub{font-size:11px;color:rgba(255,255,255,.55);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+
+    /* ── CONTROLS ── */
+    .controls{background:var(--card);border-radius:14px;padding:18px 22px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 6px rgba(15,31,92,.07);}
+    .ctrl-lbl{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;}
+    select.ctrl-sel{padding:8px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);background:#fff;cursor:pointer;outline:none;transition:border-color .2s;}
+    select.ctrl-sel:focus{border-color:var(--mid);}
+    .btn-export{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;}
+    .btn-export:hover{transform:translateY(-1px);}
+    .btn-pdf  {background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;}
+    .btn-excel{background:linear-gradient(135deg,#15803d,#22c55e);color:#fff;}
+    .btn-print{background:linear-gradient(135deg,var(--blue),var(--mid));color:#fff;}
+    .ms-auto{margin-left:auto;}
+
+    /* ── LOADING ── */
+    #loadingState{text-align:center;padding:60px;color:var(--muted);}
+    .spin{display:inline-block;width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--mid);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ── SUMMARY CARDS ── */
+    .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:22px;}
+    .sum-card{background:var(--card);border-radius:12px;padding:16px 18px;border-left:4px solid;box-shadow:0 1px 6px rgba(15,31,92,.07);}
+    .sum-card.c-pemasangan{border-color:#8b5cf6;}
+    .sum-card.c-po        {border-color:#22c55e;}
+    .sum-card.c-service   {border-color:#f59e0b;}
+    .sum-card.c-total     {border-color:#2563eb;}
+    .sum-card.c-selesai   {border-color:#06b6d4;}
+    .sum-lbl{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+    .sum-val{font-size:22px;font-weight:900;color:var(--text);font-family:'DM Mono',monospace;line-height:1.2;}
+    .sum-sub{font-size:11px;color:var(--sub);margin-top:3px;font-weight:500;}
+
+    /* ── SECTION ── */
+    .section{background:var(--card);border-radius:14px;margin-bottom:18px;overflow:hidden;box-shadow:0 1px 6px rgba(15,31,92,.07);}
+    .sec-hdr{padding:14px 20px;background:#f8faff;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+    .sec-hdr .sec-icon{font-size:18px;}
+    .sec-hdr .sec-title{font-size:14px;font-weight:800;color:var(--blue);}
+    .sec-hdr .sec-count{font-size:11px;font-weight:700;color:var(--muted);background:#e2e8f0;padding:2px 8px;border-radius:99px;}
+    .sec-hdr .sec-val{margin-left:auto;font-size:14px;font-weight:800;color:var(--mid);}
+
+    /* ── TABLE ── */
+    .rtable{width:100%;border-collapse:collapse;font-size:12px;}
+    .rtable thead th{background:#f1f5f9;padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);}
+    .rtable thead th.num{text-align:right;}
+    .rtable tbody td{padding:10px 14px;border-bottom:1px solid #f8faff;vertical-align:top;}
+    .rtable tbody tr:last-child td{border-bottom:none;}
+    .rtable tbody tr:hover td{background:#fafcff;}
+    .rtable td.num{text-align:right;font-family:'DM Mono',monospace;font-weight:600;}
+    .rtable td.bold{font-weight:700;color:var(--text);}
+    .rtable tfoot td{padding:10px 14px;font-weight:800;font-size:13px;background:#f8faff;border-top:2px solid var(--border);}
+    .rtable tfoot td.num{text-align:right;font-family:'DM Mono',monospace;color:var(--mid);}
+    .badge-status{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:700;}
+    .bs-masuk   {background:#fffbeb;color:#f59e0b;}
+    .bs-proses  {background:#eff6ff;color:#3b82f6;}
+    .bs-selesai {background:#f5f3ff;color:#8b5cf6;}
+    .bs-diambil {background:#f0fdf4;color:#22c55e;}
+    .bs-pending {background:#fef3c7;color:#d97706;}
+    .bs-diproses{background:#dbeafe;color:#2563eb;}
+    .empty-row{text-align:center;padding:30px;color:var(--muted);font-style:italic;}
+
+    /* ── CHART AREA ── */
+    .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+    .chart-box{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 1px 6px rgba(15,31,92,.07);}
+    .chart-title{font-size:13px;font-weight:800;color:var(--blue);margin-bottom:14px;}
+    .bar-chart{display:flex;flex-direction:column;gap:8px;}
+    .bar-item{display:flex;align-items:center;gap:10px;}
+    .bar-lbl{font-size:11px;font-weight:600;color:var(--sub);width:90px;flex-shrink:0;text-align:right;}
+    .bar-wrap{flex:1;background:#f1f5f9;border-radius:99px;height:20px;overflow:hidden;}
+    .bar-fill{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;padding-left:8px;}
+    .bar-fill span{font-size:10px;font-weight:700;color:#fff;white-space:nowrap;}
+    .bar-num{font-size:11px;font-weight:700;color:var(--text);width:70px;text-align:left;font-family:'DM Mono',monospace;}
+
+    /* ── PRINT ── */
+    @media print {
+      .sidebar,.topbar,.sb-overlay,.controls,.no-print{display:none!important;}
+      .main-wrap{margin-left:0!important;}
+      body{background:#fff;}
+      .ph{background:none!important;color:#000!important;border:2px solid #1e3a8a;border-radius:8px;}
+      .ph-title{color:#1e3a8a!important;}
+      .ph-sub{color:#64748b!important;}
+      .section,.sum-card,.chart-box{box-shadow:none!important;border:1px solid #e2e8f0;}
+      .content{padding:10px!important;}
+      .chart-grid{grid-template-columns:1fr 1fr;}
+      @page{margin:1.5cm;}
+    }
+    @media(max-width:991px){
+      .sidebar{transform:translateX(-100%);}
+      .sidebar.open{transform:translateX(0);}
+      .sb-overlay.show{display:block;}
+      .topbar{display:flex;}
+      .main-wrap{margin-left:0;padding-top:54px;}
+      .content{padding:14px 12px 80px;}
+      .chart-grid{grid-template-columns:1fr;}
+      .summary-grid{grid-template-columns:repeat(2,1fr);}
+    }
+  </style>
+</head>
+<body>
+
+<div class="sb-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="icon">📦</div>
+    <div>
+      <div class="name"><span style="color:var(--light)">UNIQ</span> CCTV AND NETWORK</div>
+      <div class="sub">ORDER SYSTEM</div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-lbl">Menu</div>
+    <a class="nav-item" href="form-pemesan.html"><i class="bi bi-wrench-adjustable"></i> Form Pemasangan</a>
+    <a class="nav-item" href="form-order.html"><i class="bi bi-bag-check"></i> Form Pemesanan</a>
+    <a class="nav-item" href="form-service.html"><i class="bi bi-tools"></i> Form Service &amp; Garansi</a>
+    <a class="nav-item" href="po.html"><i class="bi bi-cart3"></i> Purchase Order</a>
+    <div class="nav-lbl" id="navAdminLabel" style="display:none">Admin</div>
+    <a class="nav-item" id="navAdminBtn" style="display:none" href="admin.html"><i class="bi bi-shield-lock"></i> Admin Panel</a>
+    <div class="nav-lbl">Laporan</div>
+    <a class="nav-item active" href="rekap.html"><i class="bi bi-bar-chart-line"></i> Rekap Bulanan</a>
+  </nav>
+  <div class="sb-footer">
+    <div class="user-chip">
+      <div class="av" id="sidebarAvatar">?</div>
+      <div style="flex:1;min-width:0">
+        <div class="un" id="sidebarUserName">—</div>
+        <div class="ur" id="sidebarUserRole">—</div>
+      </div>
+      <button class="lo" onclick="doLogout()" title="Keluar"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+  </div>
+</aside>
+
+<div class="topbar" id="topbar">
+  <button class="mb" onclick="openSidebar()"><i class="bi bi-list"></i></button>
+  <div class="ttl">REKAP BULANAN</div>
+</div>
+
+<div class="main-wrap">
+<div class="content">
+
+  <!-- Page Header -->
+  <div class="ph">
+    <div class="ph-inner">
+      <div>
+        <div class="ph-title">📊 Rekap Bulanan</div>
+        <div class="ph-sub">Laporan Pemasangan · Service · Purchase Order</div>
+      </div>
+      <div id="phPeriode" style="background:rgba(255,255,255,.15);padding:10px 18px;border-radius:12px;text-align:center;color:#fff;">
+        <div style="font-size:18px;font-weight:900;" id="phBulanTahun">—</div>
+        <div style="font-size:10px;opacity:.7;letter-spacing:1px">PERIODE LAPORAN</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls no-print">
+    <div>
+      <div class="ctrl-lbl">Bulan</div>
+      <select class="ctrl-sel" id="selBulan"></select>
+    </div>
+    <div>
+      <div class="ctrl-lbl">Tahun</div>
+      <select class="ctrl-sel" id="selTahun"></select>
+    </div>
+    <button class="btn-export btn-print ms-auto" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print / PDF</button>
+    <button class="btn-export btn-pdf" onclick="exportPDF()"><i class="bi bi-file-pdf me-1"></i>Export PDF</button>
+    <button class="btn-export btn-excel" onclick="exportExcel()"><i class="bi bi-file-earmark-excel me-1"></i>Export Excel</button>
+  </div>
+
+  <!-- Content -->
+  <div id="loadingState">
+    <div class="spin"></div>
+    <div style="font-size:14px;font-weight:600">Memuat data...</div>
+  </div>
+  <div id="rekapContent" style="display:none">
+
+    <!-- Summary Cards -->
+    <div class="summary-grid" id="summaryCards"></div>
+
+    <!-- Charts -->
+    <div class="chart-grid" id="chartArea"></div>
+
+    <!-- Section Pemasangan -->
+    <div class="section" id="secPemasangan">
+      <div class="sec-hdr">
+        <span class="sec-icon">🔧</span>
+        <span class="sec-title">Form Pemasangan</span>
+        <span class="sec-count" id="cntPemasangan">0</span>
+        <span class="sec-val" id="valPemasangan">Rp 0</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="rtable" id="tblPemasangan">
+          <thead><tr>
+            <th>#</th><th>Pelanggan</th><th>No. UPB</th><th>No. Order</th>
+            <th>User</th><th>Tanggal</th><th class="num">Material</th>
+            <th class="num">Support</th><th class="num">Jasa</th><th class="num">Total</th>
+          </tr></thead>
+          <tbody id="bodyPemasangan"></tbody>
+          <tfoot><tr>
+            <td colspan="6" style="font-size:12px;color:var(--sub)">TOTAL</td>
+            <td class="num" id="ftMaterial">—</td>
+            <td class="num" id="ftSupport">—</td>
+            <td class="num" id="ftJasa">—</td>
+            <td class="num" id="ftTotalPemasangan">Rp 0</td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section Service -->
+    <div class="section" id="secService">
+      <div class="sec-hdr">
+        <span class="sec-icon">🛠️</span>
+        <span class="sec-title">Form Service &amp; Garansi</span>
+        <span class="sec-count" id="cntService">0</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="rtable" id="tblService">
+          <thead><tr>
+            <th>#</th><th>No. Tiket</th><th>Pelanggan</th><th>Barang</th>
+            <th>Keluhan</th><th>Diterima oleh</th><th>Tgl Masuk</th><th>Status</th>
+          </tr></thead>
+          <tbody id="bodyService"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section PO -->
+    <div class="section" id="secPO">
+      <div class="sec-hdr">
+        <span class="sec-icon">🛒</span>
+        <span class="sec-title">Purchase Order</span>
+        <span class="sec-count" id="cntPO">0</span>
+        <span class="sec-val" id="valPO">Rp 0</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="rtable" id="tblPO">
+          <thead><tr>
+            <th>#</th><th>Supplier</th><th>User</th><th>Tanggal PO</th>
+            <th>Est. Datang</th><th>Status</th><th>Jml Barang</th><th class="num">Total Nilai</th>
+          </tr></thead>
+          <tbody id="bodyPO"></tbody>
+          <tfoot><tr>
+            <td colspan="7">TOTAL PO</td>
+            <td class="num" id="ftTotalPO">Rp 0</td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Footer rekap -->
+    <div style="text-align:center;padding:20px 0 10px;color:var(--muted);font-size:11px;" id="rekapFooter"></div>
+  </div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ══ FIREBASE ══════════════════════════════════════════════
+if (!firebase.apps.length) firebase.initializeApp({
+  apiKey:"AIzaSyBjTKyBkKdZ9d1p2XS2PrLMpHsvvqK0jYk",
+  authDomain:"form-pesanan-uniq.firebaseapp.com",
+  databaseURL:"https://form-pesanan-uniq-default-rtdb.firebaseio.com",
+  projectId:"form-pesanan-uniq",
+  storageBucket:"form-pesanan-uniq.firebasestorage.app",
+  messagingSenderId:"507202084583",
+  appId:"1:507202084583:web:b097401aefce60bd03cc42"
+});
+const db = firebase.database();
+
+// ══ AUTH ══════════════════════════════════════════════════
+const sessRaw = sessionStorage.getItem("uniqUser");
+if (!sessRaw) { window.location.href="login.html"; throw 0; }
+const CURR_USER = JSON.parse(sessRaw);
+const IS_ADMIN  = CURR_USER.role === "admin";
+document.getElementById("sidebarAvatar").textContent   = (CURR_USER.nama||CURR_USER.username)[0].toUpperCase();
+document.getElementById("sidebarUserName").textContent = CURR_USER.nama || CURR_USER.username;
+document.getElementById("sidebarUserRole").textContent = IS_ADMIN ? "Administrator" : "User";
+if (IS_ADMIN) {
+  document.getElementById("navAdminLabel").style.display = "";
+  document.getElementById("navAdminBtn").style.display   = "";
+}
+function doLogout(){ if(!confirm("Yakin mau keluar?"))return; sessionStorage.removeItem("uniqUser"); window.location.href="login.html"; }
+function openSidebar(){ document.getElementById("sidebar").classList.add("open"); document.getElementById("sidebarOverlay").classList.add("show"); }
+function closeSidebar(){ document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebarOverlay").classList.remove("show"); }
+
+// ══ UTIL ══════════════════════════════════════════════════
+const Rp = n => "Rp "+Number(n||0).toLocaleString("id-ID");
+const parseAng = s => parseInt(String(s||"").replace(/[^0-9]/g,""))||0;
+const BULAN_ID = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+function fmtTgl(d){ return d?new Date(d).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"}):"—"; }
+function fmtDt(d) { return d?new Date(d).toLocaleString("id-ID",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"—"; }
+
+// ══ PERIOD SELECTOR ═══════════════════════════════════════
+const now = new Date();
+const selBulan = document.getElementById("selBulan");
+const selTahun = document.getElementById("selTahun");
+BULAN_ID.forEach((b,i)=>{
+  const o = document.createElement("option");
+  o.value = i; o.textContent = b;
+  if(i===now.getMonth()) o.selected=true;
+  selBulan.appendChild(o);
+});
+for(let y=now.getFullYear(); y>=2023; y--){
+  const o = document.createElement("option");
+  o.value = y; o.textContent = y;
+  if(y===now.getFullYear()) o.selected=true;
+  selTahun.appendChild(o);
+}
+selBulan.addEventListener("change", loadRekap);
+selTahun.addEventListener("change", loadRekap);
+
+// ══ DATA STORE ════════════════════════════════════════════
+let allUsers = {};
+let allService = {};
+
+// ══ LOAD ══════════════════════════════════════════════════
+function loadRekap(){
+  document.getElementById("loadingState").style.display = "";
+  document.getElementById("rekapContent").style.display = "none";
+  const bln = parseInt(selBulan.value);
+  const thn = parseInt(selTahun.value);
+  document.getElementById("phBulanTahun").textContent = BULAN_ID[bln]+" "+thn;
+  renderRekap(bln, thn);
+}
+
+Promise.all([
+  db.ref("users").once("value"),
+  db.ref("serviceTickets").once("value")
+]).then(([usSnap, svcSnap])=>{
+  allUsers   = usSnap.exists()  ? usSnap.val()  : {};
+  allService = svcSnap.exists() ? svcSnap.val() : {};
+  loadRekap();
+}).catch(e=>{
+  document.getElementById("loadingState").innerHTML='<div style="color:#ef4444;font-weight:700">❌ Gagal memuat: '+e.message+'</div>';
+});
+
+// ══ RENDER REKAP ══════════════════════════════════════════
+function renderRekap(bln, thn){
+  // ─── Kumpulkan data Pemasangan ───────────────────────────
+  const pemasangan=[];
+  Object.entries(allUsers).filter(([u])=>u!=="admin").forEach(([uname,ud])=>{
+    const app=ud.appData||{};
+    (app.pelangganList||[]).forEach(p=>{
+      const d=app.data&&app.data[p.id]||{};
+      const tgl=d.pelanggan&&d.pelanggan.tanggal;
+      if(!tgl) return;
+      const dt=new Date(tgl+"T00:00:00");
+      if(dt.getMonth()!==bln || dt.getFullYear()!==thn) return;
+      const mat=(d.material||[]).reduce((s,i)=>s+i.qty*i.harga,0);
+      const sup=(d.aksesoris||[]).reduce((s,i)=>s+i.qty*i.harga,0);
+      const jas=(parseInt(d.jasa&&d.jasa.qty)||0)*parseAng(d.jasa&&d.jasa.harga);
+      pemasangan.push({
+        nama:  p.nama||"—",
+        upb:   d.pelanggan&&d.pelanggan.noUpb||"—",
+        order: d.pelanggan&&d.pelanggan.noOrderList ? d.pelanggan.noOrderList.join(", ") : "—",
+        user:  ud.nama||uname,
+        tgl,
+        mat, sup, jas,
+        total: mat+sup+jas
+      });
+    });
+  });
+  pemasangan.sort((a,b)=>new Date(a.tgl)-new Date(b.tgl));
+
+  // ─── Kumpulkan data Service ──────────────────────────────
+  const service=[];
+  Object.values(allService).forEach(t=>{
+    const dt=new Date(t.createdAt);
+    if(dt.getMonth()!==bln || dt.getFullYear()!==thn) return;
+    service.push(t);
+  });
+  service.sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
+
+  // ─── Kumpulkan data PO ──────────────────────────────────
+  const poList=[];
+  Object.entries(allUsers).filter(([u])=>u!=="admin").forEach(([uname,ud])=>{
+    const list=ud.poData&&ud.poData.list;
+    if(!list) return;
+    Object.values(list).forEach(po=>{
+      const tgl=po.tanggal;
+      if(!tgl) return;
+      const dt=new Date(tgl+"T00:00:00");
+      if(dt.getMonth()!==bln || dt.getFullYear()!==thn) return;
+      const total=(po.barang||[]).reduce((s,b)=>s+b.qty*b.harga,0);
+      poList.push({ supplier:po.supplier||"—", user:ud.nama||uname, tgl, estimasi:po.estimasi||"", status:po.status||"pending", jmlBarang:(po.barang||[]).length, total, barang:po.barang||[] });
+    });
+  });
+  poList.sort((a,b)=>new Date(a.tgl)-new Date(b.tgl));
+
+  // ─── Totals ─────────────────────────────────────────────
+  const totPemasangan = pemasangan.reduce((s,r)=>s+r.total,0);
+  const totMat  = pemasangan.reduce((s,r)=>s+r.mat,0);
+  const totSup  = pemasangan.reduce((s,r)=>s+r.sup,0);
+  const totJas  = pemasangan.reduce((s,r)=>s+r.jas,0);
+  const totPO   = poList.reduce((s,r)=>s+r.total,0);
+  const svcSelesai = service.filter(t=>t.status==="selesai"||t.status==="diambil").length;
+
+  // ─── Summary Cards ──────────────────────────────────────
+  document.getElementById("summaryCards").innerHTML =
+    sumCard("c-pemasangan","🔧","Pemasangan",pemasangan.length+" order",Rp(totPemasangan))
+   +sumCard("c-service","🛠️","Service",service.length+" tiket",svcSelesai+" selesai / diambil")
+   +sumCard("c-po","🛒","Purchase Order",poList.length+" PO",Rp(totPO))
+   +sumCard("c-total","💰","Total Nilai",(pemasangan.length+poList.length)+" transaksi",Rp(totPemasangan+totPO))
+   +sumCard("c-selesai","✅","Service Selesai",svcSelesai+" dari "+service.length,service.length?Math.round(svcSelesai/service.length*100)+"%":"—");
+
+  // ─── Charts ─────────────────────────────────────────────
+  renderCharts(pemasangan, service, poList);
+
+  // ─── Table Pemasangan ───────────────────────────────────
+  document.getElementById("cntPemasangan").textContent = pemasangan.length;
+  document.getElementById("valPemasangan").textContent = Rp(totPemasangan);
+  const bP = document.getElementById("bodyPemasangan");
+  if(!pemasangan.length){
+    bP.innerHTML='<tr><td colspan="10" class="empty-row">Tidak ada data pemasangan bulan ini</td></tr>';
+  } else {
+    bP.innerHTML = pemasangan.map((r,i)=>`
+      <tr>
+        <td style="color:var(--muted);font-size:11px">${i+1}</td>
+        <td class="bold">${r.nama}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:11px">${r.upb}</td>
+        <td style="font-size:11px;color:var(--sub)">${r.order}</td>
+        <td style="font-size:11px">${r.user}</td>
+        <td style="font-size:11px">${fmtTgl(r.tgl)}</td>
+        <td class="num">${Rp(r.mat)}</td>
+        <td class="num">${Rp(r.sup)}</td>
+        <td class="num">${Rp(r.jas)}</td>
+        <td class="num bold" style="color:var(--mid)">${Rp(r.total)}</td>
+      </tr>`).join("");
+  }
+  document.getElementById("ftMaterial").textContent = Rp(totMat);
+  document.getElementById("ftSupport").textContent  = Rp(totSup);
+  document.getElementById("ftJasa").textContent     = Rp(totJas);
+  document.getElementById("ftTotalPemasangan").textContent = Rp(totPemasangan);
+
+  // ─── Table Service ──────────────────────────────────────
+  document.getElementById("cntService").textContent = service.length;
+  const bS = document.getElementById("bodyService");
+  const sBadge = s => ({masuk:"bs-masuk",proses:"bs-proses",selesai:"bs-selesai",diambil:"bs-diambil"}[s]||"");
+  const sLbl   = s => ({masuk:"⏳ Masuk",proses:"🔄 Diproses",selesai:"✅ Selesai",diambil:"📦 Diambil"}[s]||s);
+  if(!service.length){
+    bS.innerHTML='<tr><td colspan="8" class="empty-row">Tidak ada data service bulan ini</td></tr>';
+  } else {
+    bS.innerHTML = service.map((t,i)=>`
+      <tr>
+        <td style="color:var(--muted);font-size:11px">${i+1}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700">#${t.ticketNo}</td>
+        <td class="bold">${t.nama}</td>
+        <td style="color:var(--blue);font-weight:600">${t.barang}${t.merk?' <span style="color:var(--muted);font-weight:400;font-size:10px">'+t.merk+'</span>':''}</td>
+        <td style="font-size:11px;color:var(--sub);max-width:180px">${(t.keluhan||"—").slice(0,80)}${(t.keluhan||"").length>80?"…":""}</td>
+        <td style="font-size:11px">${t.createdBy||"—"}</td>
+        <td style="font-size:11px">${fmtTgl(t.createdAt)}</td>
+        <td><span class="badge-status ${sBadge(t.status)}">${sLbl(t.status)}</span></td>
+      </tr>`).join("");
+  }
+
+  // ─── Table PO ───────────────────────────────────────────
+  document.getElementById("cntPO").textContent = poList.length;
+  document.getElementById("valPO").textContent = Rp(totPO);
+  const bPO = document.getElementById("bodyPO");
+  const poBadge = s => ({pending:"bs-pending",diproses:"bs-diproses",selesai:"bs-selesai"}[s]||"bs-pending");
+  const poLbl   = s => ({pending:"⏳ Pending",diproses:"🔄 Diproses",selesai:"✅ Selesai"}[s]||s);
+  if(!poList.length){
+    bPO.innerHTML='<tr><td colspan="8" class="empty-row">Tidak ada PO bulan ini</td></tr>';
+  } else {
+    bPO.innerHTML = poList.map((po,i)=>`
+      <tr>
+        <td style="color:var(--muted);font-size:11px">${i+1}</td>
+        <td class="bold">${po.supplier}</td>
+        <td style="font-size:11px">${po.user}</td>
+        <td style="font-size:11px">${fmtTgl(po.tgl)}</td>
+        <td style="font-size:11px">${fmtTgl(po.estimasi)}</td>
+        <td><span class="badge-status ${poBadge(po.status)}">${poLbl(po.status)}</span></td>
+        <td style="text-align:center;font-size:11px">${po.jmlBarang} item</td>
+        <td class="num bold" style="color:var(--mid)">${Rp(po.total)}</td>
+      </tr>`).join("");
+  }
+  document.getElementById("ftTotalPO").textContent = Rp(totPO);
+
+  // ─── Footer ─────────────────────────────────────────────
+  document.getElementById("rekapFooter").innerHTML =
+    'Laporan dibuat: '+fmtDt(new Date().toISOString())+
+    ' &nbsp;·&nbsp; UNIQ CCTV AND NETWORK &copy; '+thn;
+
+  document.getElementById("loadingState").style.display  = "none";
+  document.getElementById("rekapContent").style.display  = "";
+}
+
+// ── Summary Card helper ────────────────────────────────────
+function sumCard(cls, icon, lbl, val, sub){
+  return `<div class="sum-card ${cls}">
+    <div class="sum-lbl">${icon} ${lbl}</div>
+    <div class="sum-val">${val}</div>
+    <div class="sum-sub">${sub}</div>
+  </div>`;
+}
+
+// ── Charts ─────────────────────────────────────────────────
+function renderCharts(pemasangan, service, poList){
+  // Chart 1: Nilai per user (pemasangan)
+  const userTotals={};
+  pemasangan.forEach(r=>{ userTotals[r.user]=(userTotals[r.user]||0)+r.total; });
+  const maxUser=Math.max(1,...Object.values(userTotals));
+  const userBars=Object.entries(userTotals).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([u,v])=>
+    `<div class="bar-item">
+      <div class="bar-lbl" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${u}">${u}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(v/maxUser*100)}%;background:linear-gradient(90deg,#1e3a8a,#2563eb)"><span>${Rp(v)}</span></div></div>
+    </div>`).join("") || '<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Tidak ada data</div>';
+
+  // Chart 2: Status service
+  const svcGroups={masuk:0,proses:0,selesai:0,diambil:0};
+  service.forEach(t=>{ if(svcGroups[t.status]!==undefined) svcGroups[t.status]++; });
+  const maxSvc=Math.max(1,...Object.values(svcGroups));
+  const svcColors={masuk:"#f59e0b",proses:"#3b82f6",selesai:"#8b5cf6",diambil:"#22c55e"};
+  const svcLabels={masuk:"⏳ Masuk",proses:"🔄 Diproses",selesai:"✅ Selesai",diambil:"📦 Diambil"};
+  const svcBars=Object.entries(svcGroups).map(([s,n])=>
+    `<div class="bar-item">
+      <div class="bar-lbl">${svcLabels[s]}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(n/maxSvc*100)}%;background:${svcColors[s]}"><span>${n}</span></div></div>
+      <div class="bar-num">${n} tiket</div>
+    </div>`).join("");
+
+  // Chart 3: PO per supplier
+  const supTotals={};
+  poList.forEach(po=>{ supTotals[po.supplier]=(supTotals[po.supplier]||0)+po.total; });
+  const maxSup=Math.max(1,...Object.values(supTotals));
+  const supBars=Object.entries(supTotals).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,v])=>
+    `<div class="bar-item">
+      <div class="bar-lbl" title="${s}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(v/maxSup*100)}%;background:linear-gradient(90deg,#065f46,#22c55e)"><span>${Rp(v)}</span></div></div>
+    </div>`).join("") || '<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Tidak ada data</div>';
+
+  // Chart 4: Ringkasan nilai
+  const grandTotal=(pemasangan.reduce((s,r)=>s+r.total,0))+(poList.reduce((s,r)=>s+r.total,0));
+  const pVal=pemasangan.reduce((s,r)=>s+r.total,0);
+  const poVal=poList.reduce((s,r)=>s+r.total,0);
+  const maxVal=Math.max(1,pVal,poVal);
+  const valBars=[
+    {lbl:"🔧 Pemasangan",v:pVal,col:"linear-gradient(90deg,#1e3a8a,#2563eb)"},
+    {lbl:"🛒 PO Supplier",v:poVal,col:"linear-gradient(90deg,#065f46,#22c55e)"}
+  ].map(x=>`<div class="bar-item">
+    <div class="bar-lbl">${x.lbl}</div>
+    <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(x.v/maxVal*100)}%;background:${x.col}"><span>${Rp(x.v)}</span></div></div>
+  </div>`).join("");
+
+  document.getElementById("chartArea").innerHTML =
+    `<div class="chart-box"><div class="chart-title">💰 Nilai Pemasangan per User</div><div class="bar-chart">${userBars}</div></div>`
+   +`<div class="chart-box"><div class="chart-title">🛠️ Status Tiket Service</div><div class="bar-chart">${svcBars}</div></div>`
+   +`<div class="chart-box"><div class="chart-title">🛒 Nilai PO per Supplier</div><div class="bar-chart">${supBars}</div></div>`
+   +`<div class="chart-box"><div class="chart-title">📊 Perbandingan Nilai Transaksi</div><div class="bar-chart">${valBars}</div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px">
+        <span style="color:var(--sub);font-weight:600">Grand Total Bulan Ini</span>
+        <strong style="color:var(--mid);font-size:14px">${Rp(grandTotal)}</strong>
+      </div></div>`;
+}
+
+// ══ EXPORT EXCEL ══════════════════════════════════════════
+function exportExcel(){
+  const bln = parseInt(selBulan.value);
+  const thn = parseInt(selTahun.value);
+  const periode = BULAN_ID[bln]+" "+thn;
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: Pemasangan
+  const pemasangan=[];
+  Object.entries(allUsers).filter(([u])=>u!=="admin").forEach(([uname,ud])=>{
+    const app=ud.appData||{};
+    (app.pelangganList||[]).forEach(p=>{
+      const d=app.data&&app.data[p.id]||{};
+      const tgl=d.pelanggan&&d.pelanggan.tanggal;
+      if(!tgl) return;
+      const dt=new Date(tgl+"T00:00:00");
+      if(dt.getMonth()!==bln||dt.getFullYear()!==thn) return;
+      const mat=(d.material||[]).reduce((s,i)=>s+i.qty*i.harga,0);
+      const sup=(d.aksesoris||[]).reduce((s,i)=>s+i.qty*i.harga,0);
+      const jas=(parseInt(d.jasa&&d.jasa.qty)||0)*parseAng(d.jasa&&d.jasa.harga);
+      pemasangan.push([
+        p.nama||"—",d.pelanggan&&d.pelanggan.noUpb||"—",
+        d.pelanggan&&d.pelanggan.noOrderList?d.pelanggan.noOrderList.join(", "):"—",
+        ud.nama||uname, tgl, mat, sup, jas, mat+sup+jas
+      ]);
+    });
+  });
+  const ws1 = XLSX.utils.aoa_to_sheet([
+    ["REKAP PEMASANGAN — "+periode],[""],
+    ["No","Pelanggan","No UPB","No Order","User","Tanggal","Material","Support","Jasa","Total"],
+    ...pemasangan.map((r,i)=>[i+1,...r]),
+    ["","","","","","TOTAL",
+      pemasangan.reduce((s,r)=>s+r[5],0),
+      pemasangan.reduce((s,r)=>s+r[6],0),
+      pemasangan.reduce((s,r)=>s+r[7],0),
+      pemasangan.reduce((s,r)=>s+r[8],0)]
+  ]);
+  ws1["!cols"]=[{wch:4},{wch:22},{wch:14},{wch:20},{wch:14},{wch:12},{wch:14},{wch:14},{wch:14},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, ws1, "Pemasangan");
+
+  // Sheet 2: Service
+  const service=[];
+  Object.values(allService).forEach(t=>{
+    const dt=new Date(t.createdAt);
+    if(dt.getMonth()!==bln||dt.getFullYear()!==thn) return;
+    service.push([t.ticketNo,t.nama,t.barang,t.merk||"—",t.keluhan||"—",t.createdBy||"—",new Date(t.createdAt).toLocaleDateString("id-ID"),t.status]);
+  });
+  service.sort((a,b)=>a[6]>b[6]?1:-1);
+  const ws2 = XLSX.utils.aoa_to_sheet([
+    ["REKAP SERVICE — "+periode],[""],
+    ["No","No Tiket","Pelanggan","Barang","Merk/Model","Keluhan","Diterima Oleh","Tanggal Masuk","Status"],
+    ...service.map((r,i)=>[i+1,...r])
+  ]);
+  ws2["!cols"]=[{wch:4},{wch:12},{wch:20},{wch:22},{wch:14},{wch:35},{wch:14},{wch:14},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, ws2, "Service");
+
+  // Sheet 3: PO
+  const poRows=[];
+  Object.entries(allUsers).filter(([u])=>u!=="admin").forEach(([uname,ud])=>{
+    const list=ud.poData&&ud.poData.list;
+    if(!list) return;
+    Object.values(list).forEach(po=>{
+      const tgl=po.tanggal;
+      if(!tgl) return;
+      const dt=new Date(tgl+"T00:00:00");
+      if(dt.getMonth()!==bln||dt.getFullYear()!==thn) return;
+      const total=(po.barang||[]).reduce((s,b)=>s+b.qty*b.harga,0);
+      poRows.push([po.supplier||"—",ud.nama||uname,tgl,po.estimasi||"—",po.status||"pending",(po.barang||[]).length,total]);
+    });
+  });
+  poRows.sort((a,b)=>a[2]>b[2]?1:-1);
+  const ws3 = XLSX.utils.aoa_to_sheet([
+    ["REKAP PURCHASE ORDER — "+periode],[""],
+    ["No","Supplier","User","Tanggal PO","Est. Datang","Status","Jml Barang","Total Nilai"],
+    ...poRows.map((r,i)=>[i+1,...r]),
+    ["","","","","","","TOTAL",poRows.reduce((s,r)=>s+r[6],0)]
+  ]);
+  ws3["!cols"]=[{wch:4},{wch:28},{wch:14},{wch:12},{wch:12},{wch:10},{wch:10},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, ws3, "Purchase Order");
+
+  // Sheet 4: Ringkasan
+  const totP=pemasangan.reduce((s,r)=>s+r[8],0);
+  const totPO=poRows.reduce((s,r)=>s+r[6],0);
+  const ws4 = XLSX.utils.aoa_to_sheet([
+    ["RINGKASAN REKAP — "+periode],[""],
+    ["Kategori","Jumlah","Nilai"],
+    ["Form Pemasangan",pemasangan.length+" order",totP],
+    ["Form Service",service.length+" tiket","—"],
+    ["Service Selesai/Diambil",service.filter(r=>r[8]==="selesai"||r[8]==="diambil").length+" tiket","—"],
+    ["Purchase Order",poRows.length+" PO",totPO],
+    [""],
+    ["GRAND TOTAL","",totP+totPO]
+  ]);
+  ws4["!cols"]=[{wch:24},{wch:18},{wch:18}];
+  XLSX.utils.book_append_sheet(wb, ws4, "Ringkasan");
+
+  XLSX.writeFile(wb, "Rekap_UNIQ_"+BULAN_ID[bln]+"_"+thn+".xlsx");
+}
+
+// ══ EXPORT PDF (via print) ════════════════════════════════
+function exportPDF(){
+  // Sembunyikan kontrol, trigger print dialog (browser PDF)
+  document.querySelectorAll(".no-print").forEach(el=>el.style.display="none");
+  window.print();
+  setTimeout(()=>document.querySelectorAll(".no-print").forEach(el=>el.style.display=""), 1000);
+}
+</script>
+</body>
+</html>
