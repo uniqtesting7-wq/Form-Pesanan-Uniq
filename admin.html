@@ -223,6 +223,11 @@
     <div class="nav-lbl">Laporan</div>
     <a class="nav-item" href="rekap.html"><i class="bi bi-bar-chart-line"></i> Rekap Bulanan</a>
   </nav>
+    <div style="padding:0 12px 10px">
+      <button onclick="bukaGantiPassword()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 13px;border-radius:11px;background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.75);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.75)'">
+        <i class="bi bi-key" style="font-size:16px;width:20px;text-align:center"></i> Ganti Password
+      </button>
+    </div>
   <div class="sidebar-footer">
     <div class="user-chip">
       <div class="avatar" id="sidebarAvatar">A</div>
@@ -1670,6 +1675,79 @@ function svcKirimWA() {
     .to("#preloader",{yPercent:-100,duration:.7,ease:"power3.inOut",onComplete:()=>document.getElementById("preloader").style.display="none"})
     .to("#app",{opacity:1,duration:.5,ease:"power2.out"},"-=.2");
 })();
+
+// ══ GANTI PASSWORD ═════════════════════════════════════════
+function bukaGantiPassword(){
+  ["gpwLama","gpwBaru","gpwKonfirm"].forEach(id=>{ document.getElementById(id).value=""; });
+  document.getElementById("gpwAlert").style.display="none";
+  var ex = bootstrap.Modal.getInstance(document.getElementById("modalGantiPw"));
+  if(ex) ex.dispose();
+  new bootstrap.Modal(document.getElementById("modalGantiPw")).show();
+}
+function _hashPwGanti(pw){
+  let h=0; for(let i=0;i<pw.length;i++) h=(Math.imul(31,h)+pw.charCodeAt(i))|0;
+  return Math.abs(h).toString(36)+pw.length.toString(36);
+}
+function simpanGantiPw(){
+  const lama=document.getElementById("gpwLama").value;
+  const baru=document.getElementById("gpwBaru").value;
+  const konfirm=document.getElementById("gpwKonfirm").value;
+  const al=document.getElementById("gpwAlert");
+  const err=m=>{al.style.display="block";al.style.background="#fef2f2";al.style.color="#dc2626";al.style.border="1px solid #fecaca";al.textContent=m;};
+  const ok=m=>{al.style.display="block";al.style.background="#f0fdf4";al.style.color="#16a34a";al.style.border="1px solid #bbf7d0";al.textContent=m;};
+  if(!lama) return err("⚠️ Masukkan password lama!");
+  if(baru.length<6) return err("⚠️ Password baru min. 6 karakter!");
+  if(baru!==konfirm) return err("⚠️ Konfirmasi password tidak cocok!");
+  const btn=document.getElementById("btnGpwSimpan");
+  btn.disabled=true; btn.textContent="Menyimpan...";
+  db.ref("users/"+CURR_USER.username).get().then(snap=>{
+    if(!snap.exists()) return err("❌ User tidak ditemukan!");
+    if(snap.val().password!==_hashPwGanti(lama)){
+      btn.disabled=false; btn.innerHTML='<i class="bi bi-floppy me-1"></i>Simpan';
+      return err("❌ Password lama salah!");
+    }
+    return db.ref("users/"+CURR_USER.username+"/password").set(_hashPwGanti(baru)).then(()=>{
+      ok("✓ Password berhasil diubah!");
+      btn.disabled=false; btn.innerHTML='<i class="bi bi-floppy me-1"></i>Simpan';
+      setTimeout(()=>{ bootstrap.Modal.getInstance(document.getElementById("modalGantiPw"))?.hide(); },1200);
+    });
+  }).catch(e=>{ btn.disabled=false; btn.innerHTML='<i class="bi bi-floppy me-1"></i>Simpan'; err("❌ Gagal: "+e.message); });
+}
+
 </script>
+
+<!-- MODAL GANTI PASSWORD -->
+<div class="modal fade" id="modalGantiPw" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:white;padding:18px 22px;display:flex;justify-content:space-between;align-items:center">
+        <h6 style="margin:0;font-weight:800;font-size:15px"><i class="bi bi-key me-2"></i>Ganti Password</h6>
+        <button type="button" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:20px;cursor:pointer;line-height:1;padding:0" data-bs-dismiss="modal">&#215;</button>
+      </div>
+      <div class="modal-body" style="padding:20px">
+        <div class="mb-3">
+          <label style="font-size:11px;font-weight:700;color:#6b7280;letter-spacing:.5px;display:block;margin-bottom:5px">PASSWORD LAMA</label>
+          <input type="password" id="gpwLama" class="form-control form-control-sm" placeholder="Masukkan password lama"/>
+        </div>
+        <div class="mb-3">
+          <label style="font-size:11px;font-weight:700;color:#6b7280;letter-spacing:.5px;display:block;margin-bottom:5px">PASSWORD BARU</label>
+          <input type="password" id="gpwBaru" class="form-control form-control-sm" placeholder="Min. 6 karakter"/>
+        </div>
+        <div class="mb-2">
+          <label style="font-size:11px;font-weight:700;color:#6b7280;letter-spacing:.5px;display:block;margin-bottom:5px">KONFIRMASI BARU</label>
+          <input type="password" id="gpwKonfirm" class="form-control form-control-sm" placeholder="Ulangi password baru"/>
+        </div>
+        <div id="gpwAlert" style="display:none;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;margin-top:10px"></div>
+      </div>
+      <div class="modal-footer border-0" style="padding:0 20px 20px;gap:8px">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-sm fw-bold" id="btnGpwSimpan" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:white;border:none;padding:7px 20px;border-radius:8px" onclick="simpanGantiPw()">
+          <i class="bi bi-floppy me-1"></i>Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

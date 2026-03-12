@@ -232,6 +232,11 @@
     <div class="nav-lbl">Laporan</div>
     <a class="nav-item" href="rekap.html"><i class="bi bi-bar-chart-line"></i> Rekap Bulanan</a>
   </nav>
+    <div style="padding:0 12px 10px">
+      <button onclick="bukaGantiPassword()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 13px;border-radius:11px;background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.75);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.75)'">
+        <i class="bi bi-key" style="font-size:16px;width:20px;text-align:center"></i> Ganti Password
+      </button>
+    </div>
   <div class="sb-footer">
     <div class="user-chip">
       <div class="av" id="sidebarAvatar">?</div>
@@ -827,6 +832,14 @@ window.addEventListener("DOMContentLoaded",()=>{
     setTimeout(()=>{el.style.transition="opacity .45s ease,transform .45s ease";el.style.opacity="1";el.style.transform="translateY(0)";},80+i*65);
   });
 });
+
+function bukaGantiPassword(){
+  ["pwLama","pwBaru","pwKonfirm"].forEach(id=>{ var el=document.getElementById(id); if(el) el.value=""; });
+  var al=document.getElementById("pwAlert"); if(al) al.style.display="none";
+  var ex=bootstrap.Modal.getInstance(document.getElementById("modalGantiPw")); if(ex) ex.dispose();
+  new bootstrap.Modal(document.getElementById("modalGantiPw")).show();
+}
+
 </script>
 </body>
 </html>
