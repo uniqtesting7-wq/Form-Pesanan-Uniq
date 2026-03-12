@@ -12,6 +12,39 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <style>
+    /* ══ SIDEBAR ═══════════════════════════════════════════════ */
+    .sidebar { position:fixed; top:0; left:0; height:100vh; width:280px; background:linear-gradient(175deg,#0f1f5c 0%,#1e3a8a 60%,#2563eb 100%); display:flex; flex-direction:column; z-index:200; box-shadow:4px 0 24px rgba(0,0,0,0.18); transition:transform .3s ease; }
+    .sidebar-brand { padding:24px 20px 18px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:12px; }
+    .sidebar-brand .icon { font-size:28px; }
+    .sidebar-brand .name { font-size:11px; font-weight:900; color:white; letter-spacing:1px; line-height:1.2; }
+    .sidebar-brand .sub  { font-size:9px; color:rgba(255,255,255,0.5); letter-spacing:2px; }
+    .sidebar-nav { flex:1; padding:16px 12px; overflow-y:auto; }
+    .nav-label { font-size:9px; font-weight:800; color:rgba(255,255,255,0.35); letter-spacing:3px; padding:8px 10px 4px; text-transform:uppercase; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; color:rgba(255,255,255,0.7); text-decoration:none; font-size:13px; font-weight:600; margin-bottom:2px; transition:all .2s; cursor:pointer; }
+    .nav-item:hover { background:rgba(255,255,255,0.12); color:white; transform:translateX(2px); }
+    .nav-item.active { background:rgba(255,255,255,0.18); color:white; box-shadow:inset 3px 0 0 rgba(147,197,253,0.8); }
+    .nav-item i { font-size:16px; width:20px; text-align:center; }
+    .badge-count { margin-left:auto; background:rgba(255,255,255,0.2); color:white; font-size:10px; font-weight:800; padding:2px 7px; border-radius:20px; }
+    .sidebar-footer { padding:14px 12px; border-top:1px solid rgba(255,255,255,0.1); }
+    .user-chip { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,0.08); border-radius:11px; }
+    .user-chip .avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#60a5fa,#93c5fd); color:white; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; flex-shrink:0; }
+    .user-chip .info { flex:1; min-width:0; }
+    .user-chip .uname { font-size:13px; font-weight:700; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .user-chip .urole { font-size:10px; color:rgba(255,255,255,0.5); }
+    .logout-btn { background:rgba(255,255,255,0.1); border:none; color:rgba(255,255,255,0.7); border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .2s; }
+    .logout-btn:hover { background:rgba(239,68,68,0.3); color:white; }
+    .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:199; backdrop-filter:blur(2px); }
+    .topbar { display:none; position:fixed; top:0; left:0; right:0; height:54px; background:linear-gradient(90deg,#1e3a8a,#2563eb); z-index:198; align-items:center; padding:0 14px; gap:10px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
+    .topbar .title { font-size:14px; font-weight:800; color:white; letter-spacing:2px; }
+    .menu-btn { background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:4px; }
+    @media (max-width:991px) {
+      .sidebar { transform:translateX(-100%); }
+      .sidebar.open { transform:translateX(0); }
+      .sidebar-overlay.show { display:block; }
+      .topbar { display:flex; }
+      .main-wrap { margin-left:0 !important; }
+    }
+
     *,*::before,*::after{box-sizing:border-box;}
     body{background:#f0f4f8;font-family:"Segoe UI",sans-serif;margin:0;overflow-x:hidden;}
 
@@ -29,30 +62,7 @@
     #preloader .pre-dots span{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.35);}
 
     /* Sidebar */
-    .sidebar{position:fixed;top:0;left:0;height:100vh;width:260px;background:linear-gradient(175deg,#0f1f5c 0%,#1e3a8a 60%,#2563eb 100%);display:flex;flex-direction:column;z-index:200;box-shadow:4px 0 24px rgba(0,0,0,0.18);transition:transform .3s;}
-    .sidebar-brand{padding:24px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:12px;}
-    .sidebar-brand .icon{font-size:28px;}
-    .sidebar-brand .name{font-size:11px;font-weight:900;color:white;letter-spacing:1px;line-height:1.2;}
-    .sidebar-brand .sub{font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:2px;}
-    .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto;}
-    .nav-label{font-size:9px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:2px;padding:12px 8px 6px;}
-    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;margin-bottom:2px;}
-    .nav-item:hover{background:rgba(255,255,255,0.1);color:white;}
-    .nav-item.active{background:rgba(255,255,255,0.18);color:white;box-shadow:inset 3px 0 0 #93c5fd;}
-    .nav-item i{font-size:16px;width:20px;text-align:center;}
-    .sidebar-footer{padding:14px 12px;border-top:1px solid rgba(255,255,255,0.1);}
-    .user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.08);border-radius:10px;}
-    .user-chip .avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;flex-shrink:0;}
-    .user-chip .info{flex:1;min-width:0;}
-    .user-chip .info .uname{font-size:12px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .user-chip .info .urole{font-size:10px;color:rgba(255,255,255,0.5);}
-    .user-chip .logout-btn{background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:16px;padding:2px;}
-    .user-chip .logout-btn:hover{color:white;}
-    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:199;backdrop-filter:blur(2px);}
-    .topbar{display:none;background:linear-gradient(135deg,#1e3a8a,#2563eb);color:white;padding:12px 16px;align-items:center;gap:12px;position:sticky;top:0;z-index:150;}
-    .topbar .menu-btn{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:0;}
-    .topbar .title{font-size:15px;font-weight:800;letter-spacing:2px;}
-    .main-wrap{margin-left:260px;min-height:100vh;padding:28px 28px 60px;transition:margin .3s;}
+    .main-wrap{margin-left:280px;min-height:100vh;padding:28px 28px 60px;transition:margin .3s;}
     #app{opacity:0;}
 
     /* Stats */
@@ -169,10 +179,6 @@
     .page-header h1{font-size:22px;font-weight:800;color:#1e3a8a;margin:0;}
 
     @media(max-width:991px){
-      .sidebar{transform:translateX(-100%);}
-      .sidebar.open{transform:translateX(0);}
-      .sidebar-overlay.show{display:block;}
-      .topbar{display:flex;}
       .main-wrap{margin-left:0;padding:16px 14px 60px;}
       .stat-row{grid-template-columns:repeat(2,1fr);}
       .tsb{padding:9px 14px;font-size:12px;}
@@ -182,7 +188,6 @@
       .tab-switch-wrap{width:100%;}
       .tsb{flex:1;justify-content:center;}
     }
-    @media print{.sidebar,.topbar,.sidebar-overlay,.no-print{display:none!important;}.main-wrap{margin:0;padding:0;}}
   </style>
 </head>
 <body>
@@ -206,7 +211,7 @@
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-brand">
-    <div class="icon">📦</div>
+    <div class="icon">🛡️</div>
     <div>
       <div class="name"><span style="color:#93c5fd">UNIQ</span> CCTV AND NETWORK</div>
       <div class="sub">ORDER SYSTEM</div>
@@ -216,24 +221,20 @@
     <div class="nav-label">MENU</div>
     <a class="nav-item" href="form-pemesan.html"><i class="bi bi-wrench-adjustable"></i> Form Pemasangan</a>
     <a class="nav-item" href="form-order.html"><i class="bi bi-bag-check"></i> Form Pemesanan</a>
-    <a class="nav-item" href="form-service.html"><i class="bi bi-tools"></i> Form Service & Garansi</a>
+    <a class="nav-item" href="form-service.html"><i class="bi bi-tools"></i> Form Service &amp; Garansi</a>
     <a class="nav-item" href="po.html"><i class="bi bi-cart3"></i> Purchase Order</a>
-    <div class="nav-label">ADMIN</div>
-    <a class="nav-item active" href="admin.html"><i class="bi bi-shield-lock"></i> Admin Panel</a>
-    <div class="nav-lbl">Laporan</div>
+    <div class="nav-label" id="navAdminLabel" style="display:none">ADMIN</div>
+    <a class="nav-item active" id="navAdminBtn" style="display:none" href="admin.html"><i class="bi bi-shield-lock"></i> Admin Panel</a>
+    <div class="nav-label">LAPORAN</div>
     <a class="nav-item" href="rekap.html"><i class="bi bi-bar-chart-line"></i> Rekap Bulanan</a>
   </nav>
-    <div style="padding:0 12px 10px">
-      <button onclick="bukaGantiPassword()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 13px;border-radius:11px;background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.75);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.75)'">
-        <i class="bi bi-key" style="font-size:16px;width:20px;text-align:center"></i> Ganti Password
-      </button>
-    </div>
   <div class="sidebar-footer">
+    <a class="nav-item" onclick="bukaGantiPassword()" style="margin-bottom:10px;color:rgba(255,255,255,0.7)"><i class="bi bi-key"></i> Ganti Password</a>
     <div class="user-chip">
-      <div class="avatar" id="sidebarAvatar">A</div>
+      <div class="avatar" id="sidebarAvatar">?</div>
       <div class="info">
-        <div class="uname" id="sidebarUserName">Administrator</div>
-        <div class="urole">Administrator</div>
+        <div class="uname" id="sidebarUserName">—</div>
+        <div class="urole" id="sidebarUserRole">—</div>
       </div>
       <button class="logout-btn" onclick="doLogout()" title="Keluar"><i class="bi bi-box-arrow-right"></i></button>
     </div>
@@ -243,7 +244,8 @@
 <!-- Topbar (mobile) -->
 <div class="topbar" id="topbar">
   <button class="menu-btn" onclick="openSidebar()"><i class="bi bi-list"></i></button>
-  <div class="title">ADMIN PANEL</div>
+  <div class="title">MENU</div>
+</div>
 </div>
 
 <!-- Main -->

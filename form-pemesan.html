@@ -11,6 +11,39 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
+    /* ══ SIDEBAR ═══════════════════════════════════════════════ */
+    .sidebar { position:fixed; top:0; left:0; height:100vh; width:280px; background:linear-gradient(175deg,#0f1f5c 0%,#1e3a8a 60%,#2563eb 100%); display:flex; flex-direction:column; z-index:200; box-shadow:4px 0 24px rgba(0,0,0,0.18); transition:transform .3s ease; }
+    .sidebar-brand { padding:24px 20px 18px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:12px; }
+    .sidebar-brand .icon { font-size:28px; }
+    .sidebar-brand .name { font-size:11px; font-weight:900; color:white; letter-spacing:1px; line-height:1.2; }
+    .sidebar-brand .sub  { font-size:9px; color:rgba(255,255,255,0.5); letter-spacing:2px; }
+    .sidebar-nav { flex:1; padding:16px 12px; overflow-y:auto; }
+    .nav-label { font-size:9px; font-weight:800; color:rgba(255,255,255,0.35); letter-spacing:3px; padding:8px 10px 4px; text-transform:uppercase; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; color:rgba(255,255,255,0.7); text-decoration:none; font-size:13px; font-weight:600; margin-bottom:2px; transition:all .2s; cursor:pointer; }
+    .nav-item:hover { background:rgba(255,255,255,0.12); color:white; transform:translateX(2px); }
+    .nav-item.active { background:rgba(255,255,255,0.18); color:white; box-shadow:inset 3px 0 0 rgba(147,197,253,0.8); }
+    .nav-item i { font-size:16px; width:20px; text-align:center; }
+    .badge-count { margin-left:auto; background:rgba(255,255,255,0.2); color:white; font-size:10px; font-weight:800; padding:2px 7px; border-radius:20px; }
+    .sidebar-footer { padding:14px 12px; border-top:1px solid rgba(255,255,255,0.1); }
+    .user-chip { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,0.08); border-radius:11px; }
+    .user-chip .avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#60a5fa,#93c5fd); color:white; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; flex-shrink:0; }
+    .user-chip .info { flex:1; min-width:0; }
+    .user-chip .uname { font-size:13px; font-weight:700; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .user-chip .urole { font-size:10px; color:rgba(255,255,255,0.5); }
+    .logout-btn { background:rgba(255,255,255,0.1); border:none; color:rgba(255,255,255,0.7); border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .2s; }
+    .logout-btn:hover { background:rgba(239,68,68,0.3); color:white; }
+    .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:199; backdrop-filter:blur(2px); }
+    .topbar { display:none; position:fixed; top:0; left:0; right:0; height:54px; background:linear-gradient(90deg,#1e3a8a,#2563eb); z-index:198; align-items:center; padding:0 14px; gap:10px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
+    .topbar .title { font-size:14px; font-weight:800; color:white; letter-spacing:2px; }
+    .menu-btn { background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:4px; }
+    @media (max-width:991px) {
+      .sidebar { transform:translateX(-100%); }
+      .sidebar.open { transform:translateX(0); }
+      .sidebar-overlay.show { display:block; }
+      .topbar { display:flex; }
+      .main-wrap { margin-left:0 !important; }
+    }
+
     :root {
       --navy:#0f1f5c; --blue:#1e3a8a; --mid:#2563eb; --sky:#3b82f6;
       --light:#93c5fd; --accent:#60a5fa; --bg:#f0f4fa; --card:#fff;
@@ -22,35 +55,8 @@
     body{background:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);margin:0;}
 
     /* SIDEBAR */
-    .sidebar{position:fixed;top:0;left:0;height:100vh;width:260px;background:linear-gradient(175deg,var(--navy) 0%,var(--blue) 55%,var(--mid) 100%);display:flex;flex-direction:column;z-index:200;box-shadow:6px 0 30px rgba(15,31,92,0.22);transition:transform .35s cubic-bezier(.4,0,.2,1);}
-    .sb-brand{padding:26px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:13px;}
-    .sb-brand .icon{font-size:30px;}
-    .sb-brand .name{font-size:11px;font-weight:900;color:#fff;letter-spacing:1.5px;line-height:1.2;}
-    .sb-brand .sub{font-size:9px;color:rgba(255,255,255,.45);letter-spacing:2.5px;}
-    .sb-nav{flex:1;padding:16px 12px;overflow-y:auto;}
-    .nav-lbl{font-size:9px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:2.5px;padding:14px 10px 6px;text-transform:uppercase;}
-    .nav-item{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:11px;color:rgba(255,255,255,.65);text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:2px;}
-    .nav-item:hover{background:rgba(255,255,255,.1);color:#fff;transform:translateX(2px);}
-    .nav-item.active{background:rgba(255,255,255,.16);color:#fff;box-shadow:inset 3px 0 0 var(--light);}
-    .nav-item i{font-size:16px;width:20px;text-align:center;}
-    .sb-footer{padding:14px 12px;border-top:1px solid rgba(255,255,255,.1);}
-    .user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.08);border-radius:11px;transition:background .2s;}
-    .user-chip:hover{background:rgba(255,255,255,.12);}
-    .user-chip .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--light));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;}
-    .user-chip .un{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .user-chip .ur{font-size:10px;color:rgba(255,255,255,.45);}
-    .user-chip .lo{background:none;border:none;color:rgba(255,255,255,.45);cursor:pointer;font-size:16px;padding:2px;transition:color .15s;}
-    .user-chip .lo:hover{color:#fff;}
-    .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199;backdrop-filter:blur(3px);}
-    .topbar{display:none;background:linear-gradient(90deg,var(--navy),var(--mid));color:#fff;padding:0 16px;align-items:center;gap:12px;position:sticky;top:0;z-index:150;height:54px;box-shadow:0 2px 12px rgba(15,31,92,.2);}
-    .topbar .mb{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0;}
-    .topbar .ttl{font-size:14px;font-weight:800;letter-spacing:2px;}
-    .main-wrap{margin-left:260px;min-height:100vh;transition:margin .35s cubic-bezier(.4,0,.2,1);}
+    .main-wrap{margin-left:280px;min-height:100vh;transition:margin .35s cubic-bezier(.4,0,.2,1);}
     @media(max-width:991px){
-      .sidebar{transform:translateX(-100%);}
-      .sidebar.open{transform:translateX(0);}
-      .sb-overlay.show{display:block;}
-      .topbar{display:flex;}
       .main-wrap{margin-left:0;}
       .content-wrap{padding:14px 12px 60px!important;}
       .header-top{flex-direction:column;gap:12px;}
@@ -63,7 +69,6 @@
       .data-tbl thead th:nth-child(4),.data-tbl td:nth-child(4){display:none;}
     }
     @media print{
-      .sidebar,.topbar,.sb-overlay,.no-print{display:none!important;}
       .main-wrap{margin-left:0;}
       body{background:#fff;}
       .ph,.gt-card{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -214,44 +219,41 @@
 <div class="sb-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-  <div class="sb-brand">
+  <div class="sidebar-brand">
     <div class="icon">📦</div>
     <div>
-      <div class="name"><span style="color:var(--light)">UNIQ</span> CCTV AND NETWORK</div>
+      <div class="name"><span style="color:#93c5fd">UNIQ</span> CCTV AND NETWORK</div>
       <div class="sub">ORDER SYSTEM</div>
     </div>
   </div>
-  <nav class="sb-nav">
-    <div class="nav-lbl">Menu</div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">MENU</div>
     <a class="nav-item active" href="form-pemesan.html"><i class="bi bi-wrench-adjustable"></i> Form Pemasangan</a>
     <a class="nav-item" href="form-order.html"><i class="bi bi-bag-check"></i> Form Pemesanan</a>
-    <a class="nav-item" href="form-service.html"><i class="bi bi-tools"></i> Form Service & Garansi</a>
+    <a class="nav-item" href="form-service.html"><i class="bi bi-tools"></i> Form Service &amp; Garansi</a>
     <a class="nav-item" href="po.html"><i class="bi bi-cart3"></i> Purchase Order</a>
-    <div class="nav-lbl" id="navAdminLabel" style="display:none">Admin</div>
+    <div class="nav-label" id="navAdminLabel" style="display:none">ADMIN</div>
     <a class="nav-item" id="navAdminBtn" style="display:none" href="admin.html"><i class="bi bi-shield-lock"></i> Admin Panel</a>
-    <div class="nav-lbl">Laporan</div>
+    <div class="nav-label">LAPORAN</div>
     <a class="nav-item" href="rekap.html"><i class="bi bi-bar-chart-line"></i> Rekap Bulanan</a>
   </nav>
-    <div style="padding:0 12px 10px">
-      <button onclick="bukaGantiPassword()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 13px;border-radius:11px;background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.75);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.75)'">
-        <i class="bi bi-key" style="font-size:16px;width:20px;text-align:center"></i> Ganti Password
-      </button>
-    </div>
-  <div class="sb-footer">
+  <div class="sidebar-footer">
+    <a class="nav-item" onclick="bukaGantiPassword()" style="margin-bottom:10px;color:rgba(255,255,255,0.7)"><i class="bi bi-key"></i> Ganti Password</a>
     <div class="user-chip">
-      <div class="av" id="sidebarAvatar">?</div>
-      <div style="flex:1;min-width:0">
-        <div class="un" id="sidebarUserName">—</div>
-        <div class="ur" id="sidebarUserRole">—</div>
+      <div class="avatar" id="sidebarAvatar">?</div>
+      <div class="info">
+        <div class="uname" id="sidebarUserName">—</div>
+        <div class="urole" id="sidebarUserRole">—</div>
       </div>
-      <button class="lo" onclick="doLogout()" title="Keluar"><i class="bi bi-box-arrow-right"></i></button>
+      <button class="logout-btn" onclick="doLogout()" title="Keluar"><i class="bi bi-box-arrow-right"></i></button>
     </div>
   </div>
 </aside>
 
 <div class="topbar" id="topbar">
-  <button class="mb" onclick="openSidebar()"><i class="bi bi-list"></i></button>
-  <div class="ttl">FORM PESANAN</div>
+  <button class="menu-btn" onclick="openSidebar()"><i class="bi bi-list"></i></button>
+  <div class="title">MENU</div>
+</div>
 </div>
 
 <div class="main-wrap">
