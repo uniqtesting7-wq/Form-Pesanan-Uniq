@@ -775,10 +775,20 @@ function simpanKeFirebase() {
 function autoSave() {
   if (isFromFirebase) return;
   simpanStateAktif();
-  renderTabs();
+  // Update nama tab tanpa re-render semua tab (hanya update teks tab aktif)
+  const idx = pelangganList.findIndex(p => p.id === activeId);
+  if (idx >= 0) {
+    const n = document.getElementById("namaPelanggan").value.trim();
+    if (n && pelangganList[idx].nama !== n) {
+      pelangganList[idx].nama = n;
+      // Update hanya teks tab aktif, tidak re-render semua
+      const activeTab = document.querySelector(".tab-btn.active span");
+      if (activeTab) activeTab.textContent = n;
+    }
+  }
   hitungSemua();
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(simpanKeFirebase, 1000);
+  saveTimer = setTimeout(simpanKeFirebase, 2000); // naikkan debounce jadi 2 detik
 }
 
 function simpanManual() {
@@ -787,8 +797,32 @@ function simpanManual() {
   showToast("✓ Tersimpan!", "#22c55e");
 }
 
+// Track apakah perubahan ini berasal dari device sendiri
+let localSaveVersion = 0;
+let lastSavedVersion = 0;
+
+function simpanKeFirebase() {
+  setSyncStatus("syncing", "Menyimpan...");
+  localSaveVersion++;
+  const myVersion = localSaveVersion;
+  dbRef.set({ pelangganList, data: allData, _v: myVersion })
+    .then(() => {
+      lastSavedVersion = myVersion;
+      setSyncStatus("synced", "Tersinkron ☁️");
+    })
+    .catch(e => { setSyncStatus("error", "Gagal sync"); showToast("❌ "+e.message,"#ef4444"); });
+}
+
 dbRef.on("value", (snap) => {
   const raw = snap.val();
+
+  // Jika update ini berasal dari device sendiri, skip re-render form
+  // Cukup update state di memori saja
+  if (raw && raw._v && raw._v === lastSavedVersion) {
+    setSyncStatus("synced", "Tersinkron ☁️");
+    return;
+  }
+
   isFromFirebase = true;
   if (raw && raw.pelangganList && raw.pelangganList.length) {
     pelangganList = raw.pelangganList;
@@ -802,8 +836,16 @@ dbRef.on("value", (snap) => {
     activeId = id;
   }
   renderTabs();
-  isiForm(allData[activeId] || formKosong());
-  setSyncStatus("synced", "Tersinkron real-time ☁️");
+  // Hanya isi form jika user tidak sedang aktif mengetik
+  const focused = document.activeElement;
+  const isTyping = focused && (focused.tagName === "INPUT" || focused.tagName === "TEXTAREA");
+  if (!isTyping) {
+    isiForm(allData[activeId] || formKosong());
+  } else {
+    // Simpan data baru tapi jangan ganggu focus — merge data non-aktif saja
+    hitungSemua();
+  }
+  setSyncStatus("synced", "Tersinkron ☁️");
   isFromFirebase = false;
 }, err => {
   setSyncStatus("error", "❌ "+err.message);
