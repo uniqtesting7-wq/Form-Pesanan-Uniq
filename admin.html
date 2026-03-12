@@ -108,6 +108,14 @@
     .sbadge.pending{background:#fef3c7;color:#d97706;}
     .sbadge.diproses{background:#dbeafe;color:#2563eb;}
     .sbadge.selesai{background:#dcfce7;color:#16a34a;}
+    /* Service status badges */
+    .sbadge.masuk  {background:#fffbeb;color:#f59e0b;border:1px solid #fde68a;}
+    .sbadge.proses {background:#eff6ff;color:#3b82f6;border:1px solid #bfdbfe;}
+    .sbadge.selesai2{background:#f5f3ff;color:#8b5cf6;border:1px solid #ddd6fe;}
+    .sbadge.diambil{background:#f0fdf4;color:#22c55e;border:1px solid #bbf7d0;}
+    .svc-card{border-bottom:1px solid #f1f5f9;padding:14px 18px;transition:background .15s;cursor:pointer;}
+    .svc-card:last-child{border-bottom:none;}
+    .svc-card:hover{background:#fafcff;}
 
     /* Item pills */
     .item-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;}
@@ -261,6 +269,10 @@
       <i class="bi bi-cart3"></i> Purchase Order
       <span class="badge" id="badgePO">0</span>
     </button>
+    <button class="tsb" id="tabBtnService" onclick="switchTab('service')">
+      <i class="bi bi-tools"></i> Form Service
+      <span class="badge" id="badgeService">0</span>
+    </button>
   </div>
 
   <!-- ── TAB PESANAN ── -->
@@ -299,7 +311,109 @@
     <div id="poContent"><div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Memuat...</div></div>
   </div>
 
+  <!-- ── TAB SERVICE ── -->
+  <div id="tabService" style="display:none">
+    <div class="stat-row">
+      <div class="stat-card s-total"><div class="sc-label">TOTAL TIKET</div><div class="sc-val" id="svcStatTotal">0</div></div>
+      <div class="stat-card s-pending"><div class="sc-label">MASUK</div><div class="sc-val" id="svcStatMasuk">0</div></div>
+      <div class="stat-card s-proses"><div class="sc-label">DIPROSES</div><div class="sc-val" id="svcStatProses">0</div></div>
+      <div class="stat-card s-done"><div class="sc-label">SELESAI / DIAMBIL</div><div class="sc-val" id="svcStatDone">0</div></div>
+    </div>
+    <div class="toolbar no-print">
+      <div class="search-wrap"><i class="bi bi-search"></i>
+        <input type="text" id="searchService" placeholder="Cari nama, barang, nomor tiket..." oninput="renderService()"/>
+      </div>
+      <button class="filter-chip active" data-sf="semua"   onclick="setSvcFilter('semua',this)">Semua</button>
+      <button class="filter-chip"        data-sf="masuk"   onclick="setSvcFilter('masuk',this)">⏳ Masuk</button>
+      <button class="filter-chip"        data-sf="proses"  onclick="setSvcFilter('proses',this)">🔄 Diproses</button>
+      <button class="filter-chip"        data-sf="selesai" onclick="setSvcFilter('selesai',this)">✅ Selesai</button>
+      <button class="filter-chip"        data-sf="diambil" onclick="setSvcFilter('diambil',this)">📦 Diambil</button>
+    </div>
+    <div id="serviceContent"><div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Memuat...</div></div>
+  </div>
+
 </div>
+</div>
+
+<!-- ═══ MODAL DETAIL + EDIT SERVICE ════════════════════════ -->
+<div class="modal fade" id="modalServiceDetail" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="mhdr">
+        <h5 id="svcDetailTitle"><i class="bi bi-clipboard-check me-2"></i>Detail Tiket Service</h5>
+        <button class="close-btn" data-bs-dismiss="modal">×</button>
+      </div>
+      <div class="modal-body" style="padding:24px" id="svcDetailBody"></div>
+      <div class="modal-footer border-0 no-print" style="padding:0 20px 20px;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:#25D366;color:white;border:none;font-weight:700;border-radius:8px;padding:7px 16px" onclick="svcKirimWA()"><i class="bi bi-whatsapp me-1"></i>Notif WA</button>
+        <button class="btn btn-sm btn-light ms-auto" onclick="svcEditTiket()"><i class="bi bi-pencil me-1"></i>Edit</button>
+        <button class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-weight:700;border-radius:8px;padding:7px 16px" onclick="svcHapusTiket()"><i class="bi bi-trash me-1"></i>Hapus</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL FORM SERVICE (EDIT) ═══════════════════════════ -->
+<div class="modal fade" id="modalServiceForm" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="mhdr">
+        <h5 id="svcFormTitle"><i class="bi bi-tools me-2"></i>Edit Tiket Service</h5>
+        <button class="close-btn" data-bs-dismiss="modal">×</button>
+      </div>
+      <div class="modal-body" style="padding:24px">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label-sm">NAMA PELANGGAN <span style="color:#ef4444">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="sfNama" placeholder="Nama pelanggan"/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">NO. HP / WA <span style="color:#ef4444">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="sfHp" placeholder="08123456789"/>
+          </div>
+          <div class="col-md-8">
+            <label class="form-label-sm">NAMA / JENIS BARANG <span style="color:#ef4444">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="sfBarang" placeholder="contoh: DVR Hikvision 8 Channel"/>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label-sm">MERK / MODEL</label>
+            <input type="text" class="form-control form-control-sm" id="sfMerk" placeholder="contoh: DS-7208"/>
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">KELUHAN / DESKRIPSI <span style="color:#ef4444">*</span></label>
+            <textarea class="form-control form-control-sm" id="sfKeluhan" rows="3" placeholder="Jelaskan kerusakan..."></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">STATUS</label>
+            <select class="form-select form-select-sm" id="sfStatus">
+              <option value="masuk">⏳ Masuk</option>
+              <option value="proses">🔄 Diproses</option>
+              <option value="selesai">✅ Selesai</option>
+              <option value="diambil">📦 Diambil</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">ESTIMASI SELESAI</label>
+            <input type="date" class="form-control form-control-sm" id="sfEstimasi"/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">SUPPLIER / TUJUAN RETUR</label>
+            <input type="text" class="form-control form-control-sm" id="sfSupplier" placeholder="PT. Hikvision Indonesia"/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">CATATAN INTERNAL</label>
+            <textarea class="form-control form-control-sm" id="sfCatatan" rows="2" placeholder="Catatan tambahan..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0" style="padding:0 20px 20px;gap:8px">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-sm fw-bold" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:white;border:none;padding:8px 20px" onclick="svcSimpanEdit()">
+          <i class="bi bi-floppy me-1"></i>Simpan Perubahan
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ MODAL EDIT PESANAN ═══════════════════════════════ -->
@@ -621,8 +735,10 @@ function closeSidebar() { document.getElementById("sidebar").classList.remove("o
 
 // ══ STATE ═════════════════════════════════════════════════
 let allUsers = {};
+let allServiceTickets = {};
 let activeTab = "pesanan";
 let poFilter  = "semua";
+let svcFilter = "semua";
 
 // ══ LOAD DATA (realtime) ══════════════════════════════════
 function loadAll() {
@@ -634,6 +750,12 @@ function loadAll() {
     updateAllStats();
     setSyncStatus("synced","Data termuat ☁️");
   }, err => setSyncStatus("error","Error: "+err.message));
+
+  db.ref("serviceTickets").on("value", snap => {
+    allServiceTickets = snap.exists() ? snap.val() : {};
+    updateServiceStats();
+    if(activeTab==="service") renderService();
+  });
 }
 
 // ══ TAB SWITCH ════════════════════════════════════════════
@@ -641,9 +763,13 @@ function switchTab(tab) {
   activeTab = tab;
   document.getElementById("tabPesanan").style.display = tab==="pesanan" ? "" : "none";
   document.getElementById("tabPO").style.display      = tab==="po"      ? "" : "none";
+  document.getElementById("tabService").style.display = tab==="service" ? "" : "none";
   document.getElementById("tabBtnPesanan").classList.toggle("active", tab==="pesanan");
   document.getElementById("tabBtnPO").classList.toggle("active", tab==="po");
-  gsap.from(tab==="pesanan"?"#tabPesanan":"#tabPO", {opacity:0,y:10,duration:.25});
+  document.getElementById("tabBtnService").classList.toggle("active", tab==="service");
+  const el = tab==="pesanan"?"#tabPesanan": tab==="po"?"#tabPO":"#tabService";
+  gsap.from(el, {opacity:0,y:10,duration:.25});
+  if(tab==="service") renderService();
 }
 
 // ══ STATS ═════════════════════════════════════════════════
@@ -1353,6 +1479,234 @@ async function simpanAssignPO() {
   showToast("✓ PO dikirim ke @"+targetUser+" ("+targetName+")","#22c55e");
 }
 // ══ END ASSIGN ════════════════════════════════════════════
+
+// ══ SERVICE ════════════════════════════════════════════════
+const SVC_SL = { masuk:"Masuk", proses:"Diproses", selesai:"Selesai", diambil:"Diambil" };
+const SVC_SI = { masuk:"⏳", proses:"🔄", selesai:"✅", diambil:"📦" };
+const SVC_SO = ["masuk","proses","selesai","diambil"];
+
+let svcAktifId = null;
+
+function updateServiceStats() {
+  const all  = Object.values(allServiceTickets);
+  const cnt  = s => all.filter(t=>t.status===s).length;
+  document.getElementById("svcStatTotal").textContent  = all.length;
+  document.getElementById("svcStatMasuk").textContent  = cnt("masuk");
+  document.getElementById("svcStatProses").textContent = cnt("proses");
+  document.getElementById("svcStatDone").textContent   = cnt("selesai") + cnt("diambil");
+  document.getElementById("badgeService").textContent  = all.length;
+}
+
+function setSvcFilter(f, btn) {
+  svcFilter = f;
+  document.querySelectorAll("[data-sf]").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderService();
+}
+
+function renderService() {
+  const q    = (document.getElementById("searchService").value||"").trim().toLowerCase();
+  const wrap = document.getElementById("serviceContent");
+  let list   = Object.values(allServiceTickets).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  if(svcFilter !== "semua") list = list.filter(t=>t.status===svcFilter);
+  if(q) list = list.filter(t=>
+    (t.nama||"").toLowerCase().includes(q) ||
+    (t.barang||"").toLowerCase().includes(q) ||
+    (t.ticketNo||"").toLowerCase().includes(q) ||
+    (t.keluhan||"").toLowerCase().includes(q) ||
+    (t.createdBy||"").toLowerCase().includes(q)
+  );
+  if(!list.length){
+    wrap.innerHTML='<div class="empty-row">'+(q||svcFilter!=="semua"?"Tidak ada tiket yang cocok.":"Belum ada tiket servis di sistem.")+'</div>';
+    return;
+  }
+  wrap.innerHTML="";
+
+  // Group by createdBy (user)
+  const byUser = {};
+  list.forEach(t=>{
+    const u = t.createdBy || "—";
+    if(!byUser[u]) byUser[u]=[];
+    byUser[u].push(t);
+  });
+
+  Object.entries(byUser).forEach(([user, tickets])=>{
+    const sec = document.createElement("div");
+    sec.className = "user-section";
+
+    const ush = document.createElement("div");
+    ush.className = "ush";
+    ush.innerHTML =
+      '<div><div class="uname">🔧 '+user+'</div>'
+      +'<div class="umeta">'+tickets.length+' tiket servis</div></div>'
+      +'<div class="ush-right">'
+      +'<div class="utotal" style="font-size:13px;font-weight:700;color:#f59e0b">'+tickets.filter(t=>t.status==="masuk").length+' masuk</div>'
+      +'<i class="bi bi-chevron-down chevron open"></i>'
+      +'</div>';
+    ush.onclick = ()=>toggleSection(ush);
+    sec.appendChild(ush);
+
+    const usb = document.createElement("div");
+    usb.className = "usb open";
+
+    tickets.forEach(t=>{
+      const svcBadgeClass = t.status==="selesai"?"selesai2":t.status;
+      const card = document.createElement("div");
+      card.className = "svc-card";
+      card.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'
+        +'<span style="font-size:10px;font-weight:700;color:#9ca3af;font-family:monospace">#'+t.ticketNo+'</span>'
+        +'<span class="sbadge '+svcBadgeClass+'">'+SVC_SI[t.status]+' '+SVC_SL[t.status]+'</span>'
+        +'</div>'
+        +'<div style="font-size:14px;font-weight:700;color:#1f2937">'+t.nama+'</div>'
+        +'<div style="font-size:12px;font-weight:600;color:#2563eb;margin-top:2px">'+t.barang+(t.merk?' <span style="color:#9ca3af;font-weight:400">· '+t.merk+'</span>':'')+'</div>'
+        +'<div style="font-size:11px;color:#6b7280;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+( t.keluhan||"—")+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0">'
+        +'<div style="font-size:10px;color:#9ca3af">'+fmtTgl(t.createdAt)+'</div>'
+        +'<div style="font-size:11px;color:#6b7280;margin-top:2px">📱 '+(t.hp||"—")+'</div>'
+        +'<div class="action-row no-print" style="justify-content:flex-end;margin-top:8px">'
+        +'<button class="btn-edit" id="svc_e_'+t.id+'">✏️ Edit</button>'
+        +'<button class="btn-del"  id="svc_d_'+t.id+'">🗑 Hapus</button>'
+        +'</div></div></div>';
+      card.querySelector('#svc_e_'+t.id).onclick = e=>{ e.stopPropagation(); svcBukaDetail(t.id); };
+      card.querySelector('#svc_d_'+t.id).onclick = e=>{ e.stopPropagation(); svcHapusTiket(t.id); };
+      card.onclick = ()=>svcBukaDetail(t.id);
+      usb.appendChild(card);
+    });
+
+    sec.appendChild(usb);
+    wrap.appendChild(sec);
+  });
+}
+
+function svcBukaDetail(id) {
+  svcAktifId = id;
+  const t = allServiceTickets[id]; if(!t) return;
+  document.getElementById("svcDetailTitle").innerHTML = '<i class="bi bi-clipboard-check me-2"></i>Tiket #'+t.ticketNo;
+
+  const si = SVC_SO.indexOf(t.status);
+  let stepHTML="", sbtnHTML="";
+  SVC_SO.forEach((s,i)=>{
+    stepHTML += '<div style="display:flex;flex-direction:column;align-items:center;flex:1;position:relative">'
+      +(i<SVC_SO.length-1?'<div style="position:absolute;top:16px;left:50%;right:-50%;height:2px;background:'+(i<si?'#2563eb':'#e2e8f0')+';z-index:0"></div>':'')
+      +'<div onclick="svcUbahStatus(\''+t.id+'\',\''+s+'\')" title="Set ke '+SVC_SL[s]+'" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;border:2px solid '+(i<si?'#2563eb':i===si?'#2563eb':'#e2e8f0')+';background:'+(i<si?'#2563eb':i===si?'white':'white')+';color:'+(i<si?'white':i===si?'#2563eb':'#9ca3af')+';position:relative;z-index:1;cursor:pointer;box-shadow:'+(i===si?'0 0 0 4px rgba(37,99,235,.15)':'none')+'">'
+      +(i<si?'<i class="bi bi-check-lg" style="font-size:12px"></i>':SVC_SI[s])+'</div>'
+      +'<div style="font-size:9px;font-weight:700;color:'+(i<=si?'#2563eb':'#9ca3af')+';margin-top:5px;text-align:center;text-transform:uppercase">'+SVC_SL[s]+'</div>'
+      +'</div>';
+    sbtnHTML += '<button onclick="svcUbahStatus(\''+t.id+'\',\''+s+'\')" style="padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid;transition:all .2s;'
+      +(t.status===s?'background:#2563eb;color:white;border-color:#2563eb;':'background:white;color:#6b7280;border-color:#e2e8f0;')+'">'+SVC_SI[s]+' '+SVC_SL[s]+'</button>';
+  });
+
+  document.getElementById("svcDetailBody").innerHTML =
+    '<div style="margin-bottom:20px"><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Status Servis</div>'
+    +'<div style="display:flex;align-items:center;margin:0 0 16px">'+stepHTML+'</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+sbtnHTML+'</div></div>'
+    +'<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px">Informasi Pelanggan<span style="flex:1;height:1px;background:#e2e8f0;display:block"></span></div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:6px"><span style="min-width:110px;font-size:12px;color:#9ca3af;font-weight:600">Nama</span><span style="font-size:12px;font-weight:600">'+t.nama+'</span></div>'
+    +'<div style="display:flex;gap:8px"><span style="min-width:110px;font-size:12px;color:#9ca3af;font-weight:600">No. HP / WA</span><span style="font-size:12px;font-weight:600">'+(t.hp||"—")+'</span></div></div>'
+    +'<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px">Barang Diservis<span style="flex:1;height:1px;background:#e2e8f0;display:block"></span></div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:6px"><span style="min-width:110px;font-size:12px;color:#9ca3af;font-weight:600">Nama Barang</span><span style="font-size:12px;font-weight:600">'+t.barang+'</span></div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:6px"><span style="min-width:110px;font-size:12px;color:#9ca3af;font-weight:600">Merk / Model</span><span style="font-size:12px;font-weight:600">'+(t.merk||"—")+'</span></div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:6px"><span style="min-width:110px;font-size:12px;color:#9ca3af;font-weight:600">Supplier/Retur</span><span style="font-size:12px;font-weight:600">'+(t.supplier||"Belum ditentukan")+'</span></div>'
+    +'<div style="display:flex;gap:8px"><span style="min-width:110px;font-size:12px;color:#9ca3af;font-weight:600">Est. Selesai</span><span style="font-size:12px;font-weight:600">'+fmtTgl(t.estimasi)+'</span></div></div>'
+    +'<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px">Keluhan<span style="flex:1;height:1px;background:#e2e8f0;display:block"></span></div>'
+    +'<div style="background:#f8faff;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:12px;color:#1e293b;line-height:1.6;white-space:pre-wrap">'+(t.keluhan||"—")+'</div></div>'
+    +(t.catatan?'<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px">Catatan Internal<span style="flex:1;height:1px;background:#e2e8f0;display:block"></span></div><div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:12px 14px;font-size:12px;color:#1e293b;line-height:1.6;white-space:pre-wrap">'+t.catatan+'</div></div>':"")
+    +'<div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px">Timeline<span style="flex:1;height:1px;background:#e2e8f0;display:block"></span></div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:6px"><span style="min-width:110px;font-size:12px;color:#9ca3af;font-weight:600">Masuk</span><span style="font-size:12px;font-weight:600">'+fmtDtSvc(t.createdAt)+'</span></div>'
+    +(t.updatedAt?'<div style="display:flex;gap:8px;margin-bottom:6px"><span style="min-width:110px;font-size:12px;color:#9ca3af;font-weight:600">Update</span><span style="font-size:12px;font-weight:600">'+fmtDtSvc(t.updatedAt)+'</span></div>':"")
+    +'<div style="display:flex;gap:8px"><span style="min-width:110px;font-size:12px;color:#9ca3af;font-weight:600">Diterima oleh</span><span style="font-size:12px;font-weight:600">'+(t.createdBy||"—")+'</span></div></div>';
+
+  var ex = bootstrap.Modal.getInstance(document.getElementById("modalServiceDetail"));
+  if(ex) ex.dispose();
+  new bootstrap.Modal(document.getElementById("modalServiceDetail")).show();
+}
+
+function fmtTgl(d){ return d?new Date(d).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"}):"—"; }
+function fmtDtSvc(d){ return d?new Date(d).toLocaleString("id-ID",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"—"; }
+
+function svcUbahStatus(id, status) {
+  const t = allServiceTickets[id]; if(!t || t.status===status) return;
+  db.ref("serviceTickets/"+id).update({ status:status, updatedAt:new Date().toISOString() }).then(()=>{
+    showToast(SVC_SI[status]+" Status → "+SVC_SL[status],"#2563eb");
+    if(document.getElementById("modalServiceDetail").classList.contains("show")) svcBukaDetail(id);
+  });
+}
+
+function svcEditTiket() {
+  const t = allServiceTickets[svcAktifId]; if(!t) return;
+  var mD = bootstrap.Modal.getInstance(document.getElementById("modalServiceDetail")); if(mD) mD.hide();
+  document.getElementById("svcFormTitle").innerHTML = '<i class="bi bi-pencil me-2"></i>Edit Tiket #'+t.ticketNo;
+  document.getElementById("sfNama").value     = t.nama     || "";
+  document.getElementById("sfHp").value       = t.hp       || "";
+  document.getElementById("sfBarang").value   = t.barang   || "";
+  document.getElementById("sfMerk").value     = t.merk     || "";
+  document.getElementById("sfKeluhan").value  = t.keluhan  || "";
+  document.getElementById("sfStatus").value   = t.status   || "masuk";
+  document.getElementById("sfEstimasi").value = t.estimasi || "";
+  document.getElementById("sfSupplier").value = t.supplier || "";
+  document.getElementById("sfCatatan").value  = t.catatan  || "";
+  setTimeout(()=>{ new bootstrap.Modal(document.getElementById("modalServiceForm")).show(); }, 300);
+}
+
+function svcSimpanEdit() {
+  const t = allServiceTickets[svcAktifId]; if(!t) return;
+  const nama    = document.getElementById("sfNama").value.trim();
+  const hp      = document.getElementById("sfHp").value.trim();
+  const barang  = document.getElementById("sfBarang").value.trim();
+  const keluhan = document.getElementById("sfKeluhan").value.trim();
+  if(!nama)    { showToast("⚠️ Nama wajib diisi!","#f59e0b"); return; }
+  if(!hp)      { showToast("⚠️ No. HP wajib diisi!","#f59e0b"); return; }
+  if(!barang)  { showToast("⚠️ Nama barang wajib diisi!","#f59e0b"); return; }
+  if(!keluhan) { showToast("⚠️ Keluhan wajib diisi!","#f59e0b"); return; }
+  const btn = document.querySelector('#modalServiceForm .btn.btn-sm.fw-bold');
+  btn.disabled=true; btn.textContent="Menyimpan...";
+  db.ref("serviceTickets/"+svcAktifId).update({
+    nama, hp, barang,
+    merk:     document.getElementById("sfMerk").value.trim(),
+    keluhan,
+    status:   document.getElementById("sfStatus").value,
+    estimasi: document.getElementById("sfEstimasi").value,
+    supplier: document.getElementById("sfSupplier").value.trim(),
+    catatan:  document.getElementById("sfCatatan").value.trim(),
+    updatedAt: new Date().toISOString()
+  }).then(()=>{
+    btn.disabled=false; btn.innerHTML='<i class="bi bi-floppy me-1"></i>Simpan Perubahan';
+    var m = bootstrap.Modal.getInstance(document.getElementById("modalServiceForm")); if(m) m.hide();
+    showToast("✓ Tiket #"+t.ticketNo+" diperbarui!","#22c55e");
+  }).catch(e=>{ btn.disabled=false; btn.innerHTML='<i class="bi bi-floppy me-1"></i>Simpan Perubahan'; showToast("❌ Gagal: "+e.message,"#ef4444"); });
+}
+
+function svcHapusTiket(id) {
+  if(id) svcAktifId = id;
+  const t = allServiceTickets[svcAktifId]; if(!t) return;
+  if(!confirm('Hapus tiket #'+t.ticketNo+' milik "'+t.nama+'"?\nTidak bisa dibatalkan!')) return;
+  db.ref("serviceTickets/"+svcAktifId).remove().then(()=>{
+    var m = bootstrap.Modal.getInstance(document.getElementById("modalServiceDetail")); if(m) m.hide();
+    showToast("🗑 Tiket dihapus","#6b7280");
+  });
+}
+
+function svcKirimWA() {
+  const t = allServiceTickets[svcAktifId]; if(!t) return;
+  const hp = (t.hp||"").replace(/[^0-9]/g,"").replace(/^0/,"62");
+  if(!hp){ showToast("No. HP tidak ada!","#f59e0b"); return; }
+  const pesan = {
+    masuk:   "Barang Anda telah kami *terima* dan sedang menunggu antrian servis.",
+    proses:  "Barang Anda sedang dalam proses *perbaikan / pengecekan*.",
+    selesai: "Barang Anda sudah *SELESAI* diperbaiki dan siap diambil!",
+    diambil: "Terima kasih! Barang Anda telah *diambil*. Semoga puas dengan layanan kami."
+  };
+  var msg = "*INFO SERVIS — UNIQ CCTV AND NETWORK*\n————————————\n";
+  msg += "No. Tiket: *"+t.ticketNo+"*\nNama: "+t.nama+"\nBarang: "+t.barang+(t.merk?" ("+t.merk+")":"")+"\nStatus: *"+SVC_SL[t.status]+"*\n————————————\n";
+  msg += pesan[t.status]+"\n\nHubungi kami jika ada pertanyaan. Terima kasih!";
+  window.open("https://wa.me/"+hp+"?text="+encodeURIComponent(msg),"_blank");
+}
+
+// ══ END SERVICE ════════════════════════════════════════════
 
 // ── GSAP Preloader ─────────────────────────────────────────
 (function() {
