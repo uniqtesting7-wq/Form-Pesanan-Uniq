@@ -69,9 +69,118 @@
       .data-tbl thead th:nth-child(4),.data-tbl td:nth-child(4){display:none;}
     }
     @media print{
-      .main-wrap{margin-left:0;}
-      body{background:#fff;}
-      .ph,.gt-card{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+      /* ── Reset layout ── */
+      *{ -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      html, body { margin:0; padding:0; background:#fff !important; font-size:11pt; }
+      .main-wrap { margin-left:0 !important; }
+      .content-wrap { padding:10mm 12mm !important; max-width:100% !important; }
+
+      /* ── Sembunyikan elemen non-print ── */
+      .sidebar, .sidebar-overlay, .topbar,
+      .no-print, .h-actions, .tabs-bar,
+      .btn-add-ord, .btn-ord-del,
+      .ac, .btn-del, .btn-add,
+      #toast, .sf,
+      [data-bs-toggle], .modal { display:none !important; }
+
+      /* ── Page header ── */
+      .ph {
+        border-radius: 10px !important;
+        padding: 14px 18px 14px !important;
+        margin-bottom: 12px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        box-shadow: none !important;
+      }
+      .ph::before, .ph::after { display:none !important; }
+      .header-top { padding-bottom: 10px !important; }
+      .h-brand .h-title { font-size: 16pt !important; }
+      .h-brand .h-lbl { font-size: 8pt !important; }
+      #syncStatus { display:none !important; }
+
+      /* ── Section cards — jangan terpotong ── */
+      .sc {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        margin-top: 10px !important;
+        padding: 14px 16px !important;
+        border-radius: 10px !important;
+        box-shadow: none !important;
+        border: 1.5px solid #e2e8f0 !important;
+      }
+      .sc:hover { box-shadow: none !important; transform: none !important; }
+      .sc-hd { margin-bottom: 10px !important; }
+      .sc-title { font-size: 11pt !important; }
+
+      /* ── Tabel — jangan terpotong per baris ── */
+      .tbl-wrap {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        border-radius: 8px !important;
+        overflow: visible !important;
+      }
+      .data-tbl { width: 100% !important; font-size: 9.5pt !important; }
+      .data-tbl thead th { padding: 7px 9px !important; font-size: 8pt !important; background: #f8faff !important; }
+      .data-tbl td { padding: 5px 7px !important; }
+      .data-tbl tbody tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .tf-row td { padding: 8px !important; font-size: 9.5pt !important; }
+
+      /* ── Input fields jadi teks biasa saat print ── */
+      .ti, .finput {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 2px 4px !important;
+        font-size: inherit !important;
+      }
+      .ti:focus, .finput:focus { box-shadow: none !important; }
+
+      /* ── No order list ── */
+      .no-order-row { margin-bottom: 3px !important; }
+      .finput { padding: 4px 6px !important; }
+
+      /* ── Jasa row ── */
+      .jasa-row {
+        grid-template-columns: 1fr 80px 130px 130px !important;
+        gap: 8px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .jasa-sub {
+        padding: 8px 12px !important;
+        border-radius: 8px !important;
+      }
+      .jasa-sub-val { font-size: 12pt !important; }
+
+      /* ── Grand total card ── */
+      .gt-card {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        border-radius: 10px !important;
+        padding: 16px 20px !important;
+        margin-top: 10px !important;
+        box-shadow: none !important;
+      }
+      .gt-card::before, .gt-card::after { display:none !important; }
+      .gt-val { font-size: 20pt !important; }
+      .gt-lbl { font-size: 9pt !important; }
+
+      /* ── Form fields row ── */
+      .row.g-3 { gap: 8px !important; }
+      .flbl { font-size: 8pt !important; margin-bottom: 3px !important; }
+
+      /* ── Sub cell angka ── */
+      .sub-cell { font-size: 9pt !important; }
+
+      /* ── Paksa elemen tidak overflow di tengah halaman ── */
+      .sc + .sc { page-break-before: auto !important; }
+      table { border-collapse: collapse !important; }
+      thead { display: table-header-group !important; }
+      tfoot { display: table-footer-group !important; }
+      tr { page-break-inside: avoid !important; break-inside: avoid !important; }
     }
 
     /* CONTENT */
@@ -253,7 +362,6 @@
 <div class="topbar" id="topbar">
   <button class="menu-btn" onclick="openSidebar()"><i class="bi bi-list"></i></button>
   <div class="title">MENU</div>
-</div>
 </div>
 
 <div class="main-wrap">

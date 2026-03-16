@@ -180,8 +180,80 @@
 
     /* ── PRINT ────────────────────────────────────────── */
     @media print{
-      .main-wrap{margin-left:0;}
-      body{background:#fff;}
+      /* ── Reset layout ── */
+      *{ -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      html, body { margin:0; padding:0; background:#fff !important; font-size:11pt; }
+      .main-wrap { margin-left:0 !important; padding-top:0 !important; }
+      .content-wrap { padding:10mm 12mm !important; max-width:100% !important; }
+
+      /* ── Sembunyikan elemen non-print ── */
+      .sidebar, .sidebar-overlay, .topbar,
+      .no-print, .toolbar, .filter-tabs,
+      .ticket-grid, #toast,
+      [data-bs-toggle], .modal { display:none !important; }
+
+      /* ── Saat cetak struk, hanya panel yang relevan yang tampil ── */
+      #detailPanel { position: static !important; display: block !important; }
+      #detailPanel .overlay { display: none !important; }
+      #detailPanel .panel {
+        position: static !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+        height: auto !important;
+      }
+
+      /* ── Page header ── */
+      .ph {
+        border-radius: 10px !important;
+        padding: 14px 18px !important;
+        margin-bottom: 12px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        box-shadow: none !important;
+      }
+      .ph::before, .ph::after { display:none !important; }
+
+      /* ── Detail sections — jangan terpotong ── */
+      .detail-section {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        margin-bottom: 12px !important;
+        border-radius: 8px !important;
+      }
+      .detail-section-title { font-size: 8pt !important; }
+      .detail-key { font-size: 10pt !important; }
+      .detail-val { font-size: 10pt !important; }
+
+      /* ── Stepper ── */
+      .stepper {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      /* ── Status buttons ── */
+      .sbtn { display: none !important; }
+
+      /* ── Keluhan box ── */
+      .keluhan-box {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        font-size: 10pt !important;
+      }
+
+      /* ── Detail header ── */
+      .detail-header {
+        border-radius: 10px !important;
+        padding: 14px 18px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      /* ── Table ── */
+      table { border-collapse: collapse !important; }
+      thead { display: table-header-group !important; }
+      tfoot { display: table-footer-group !important; }
+      tr { page-break-inside: avoid !important; break-inside: avoid !important; }
     }
 
     /* ── RESPONSIVE ───────────────────────────────────── */
@@ -232,7 +304,6 @@
 <div class="topbar" id="topbar">
   <button class="menu-btn" onclick="openSidebar()"><i class="bi bi-list"></i></button>
   <div class="title">MENU</div>
-</div>
 </div>
 
 <div class="main-wrap">
